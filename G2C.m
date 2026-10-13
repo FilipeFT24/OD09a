@@ -80,7 +80,7 @@ for i = 1:K
         d2U_dof1ib    = bfr_M(i, :).*(c_ri(i-1, 1).*dr_i(i-1, 1)+c_li(i-1, 1).*dl_i(i-1, 1))./2; % con
         d2U_dof1ic    = bfr_M(i, :).*(c_ri(i-1, 1).*ar_i(i-1, 1)+c_li(i-1, 1).*al_i(i-1, 1));    % pen
         d2U_dof(i, :) = ...
-            d2U_dof(i, :)-(d2U_dof1ia.*0+d2U_dof1ib+d2U_dof1ic.*0); % <-o
+            d2U_dof(i, :)-(d2U_dof1ia+d2U_dof1ib+d2U_dof1ic); % <-o
     end
     if i < K
         if ~flag
@@ -91,7 +91,7 @@ for i = 1:K
         d2U_dof2ib    = bfl_M(i, :).*(c_li(i, 1).*dl_i(i, 1)+c_ri(i, 1).*dr_i(i, 1))./2; % con
         d2U_dof2ic    = bfl_M(i, :).*(c_li(i, 1).*al_i(i, 1)+c_ri(i, 1).*ar_i(i, 1));    % pen
         d2U_dof(i, :) = ...
-            d2U_dof(i, :)+(d2U_dof2ia.*0+d2U_dof2ib+d2U_dof2ic.*0); % o->
+            d2U_dof(i, :)+(d2U_dof2ia+d2U_dof2ib+d2U_dof2ic); % o->
     end
 end
 %--------------------------------------------------------------------------
@@ -107,8 +107,8 @@ d2U_dofb2b    = bflb2_M.*(clb2.*dlb2+crb2.*drb2)./2;   % =
 d2U_dofb1c    = bfrb1_M.*(crb1.*arb1+clb1.*alb1).*eta; % pen
 d2U_dofb2c    = bflb2_M.*(clb2.*alb2+crb2.*arb2).*eta; % =
 d2U_dof(1, :) = ...
-    d2U_dof(1, :)-(d2U_dofb1a.*0+d2U_dofb1b+d2U_dofb1c.*0);
+    d2U_dof(1, :)-(d2U_dofb1a+d2U_dofb1b+d2U_dofb1c);
 d2U_dof(K, :) = ...
-    d2U_dof(K, :)+(d2U_dofb2a.*0+d2U_dofb2b+d2U_dofb2c.*0);
+    d2U_dof(K, :)+(d2U_dofb2a+d2U_dofb2b+d2U_dofb2c);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 end

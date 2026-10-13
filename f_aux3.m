@@ -33,6 +33,25 @@ mass  = bf_*Wbf;
 Wbd_m = Wbd/mass;
 Wbf_m = Wbf/mass;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% CELL JAC.:
+%--------------------------------------------------------------------------
+ddr_m = zeros(N, N, R);
+dfr_m = zeros(N, N, R);
+fdr_m = zeros(N, N, R);
+DDr_M = zeros(N, N, R, K);
+DFr_M = zeros(N, N, R, K);
+FDr_M = zeros(N, N, R, K);
+for r = 1:R
+    ddr_m(:, :, r) = Wbd_m(r, :).'*bd(r, :); % d_m*d
+    dfr_m(:, :, r) = Wbd_m(r, :).'*bf(r, :); % d_m*f
+    fdr_m(:, :, r) = Wbf_m(r, :).'*bd(r, :); % f_m*d
+end
+for i = 1:K
+    DDr_M(:, :, :, i) = ddr_m./det(i, 1).^3;
+    DFr_M(:, :, :, i) = ddr_m./det(i, 1).^2;
+    FDr_M(:, :, :, i) = fdr_m./det(i, 1).^2;
+end
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % FACE:
 %--------------------------------------------------------------------------
 bdl = zeros(1, N);
@@ -45,6 +64,8 @@ for i = 1:N
     bfr(1, i) = fh{1, i}(0);
     bfl(1, i) = fh{1, i}(1);
 end
+bfl_  = bfl.';
+bfr_  = bfr.';
 bdl_m = bdl/mass;
 bdr_m = bdr/mass;
 bfl_m = bfl/mass;
@@ -60,6 +81,7 @@ for i = 1:K
     bfr_M(i, :) = bfr_m./det(i, 1);
 end
 %--------------------------------------------------------------------------
+%{
 ffll = zeros(N, N);
 fflr = zeros(N, N);
 ffrl = zeros(N, N);
@@ -70,6 +92,11 @@ for j = 1:N
     ffrl(:, j) = bfr.*bfl(:, j); % W (->)
     ffrr(:, j) = bfr.*bfr(:, j); % W (->)
 end
+%}
+ffll     = bfl_*bfl;
+fflr     = bfl_*bfr;
+ffrl     = bfr_*bfl;
+ffrr     = bfr_*bfr;
 ffll3_m  = mass\ffll;
 fflr3_m  = mass\fflr;
 ffrl3_m  =-mass\ffrl;
@@ -99,6 +126,7 @@ bfrLrr_b = bfr_rr./det(1, 1);
 Wbf_          = Wbf.';
 dc_m          = bd_*Wbf_m;
 intg.xqc      = xqc;
+intg.bd       = bd;
 intg.bd_      = bd_;
 intg.bf_      = bf_;
 intg.Wbf      = Wbf;

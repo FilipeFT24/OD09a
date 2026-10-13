@@ -35,25 +35,29 @@ Wbf_m = Wbf/mass;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % FACE:
 %--------------------------------------------------------------------------
-bdl  = zeros(1, N);
-bdr  = zeros(1, N);
-bfl  = zeros(1, N);
-bfr  = zeros(1, N);
+bdl = zeros(1, N);
+bdr = zeros(1, N);
+bfl = zeros(1, N);
+bfr = zeros(1, N);
 for i = 1:N
     bdl(1, i) = dh{1, i}(1);
     bdr(1, i) = dh{1, i}(0);
     bfr(1, i) = fh{1, i}(0);
     bfl(1, i) = fh{1, i}(1);
 end
-bDl  = bdl./det;
-bDr  = bdr./det;
-fl   = bfl/mass;
-fr   = bfr/mass;
-fl_M = zeros(K, N);
-fr_M = zeros(K, N);
+bdl_m = bdl/mass;
+bdr_m = bdr/mass;
+bfl_m = bfl/mass;
+bfr_m = bfr/mass;
+bDl_M = zeros(K, N);
+bDr_M = zeros(K, N);
+bfl_M = zeros(K, N);
+bfr_M = zeros(K, N);
 for i = 1:K
-    fl_M(i, :) = fl./det(i, 1)./2; % o ->
-    fr_M(i, :) =-fr./det(i, 1)./2; % <- o
+    bDl_M(i, :) = bdl_m./det(i, 1).^2;
+    bDr_M(i, :) = bdr_m./det(i, 1).^2;
+    bfl_M(i, :) = bfl_m./det(i, 1);
+    bfr_M(i, :) = bfr_m./det(i, 1);
 end
 %--------------------------------------------------------------------------
 ffll = zeros(N, N);
@@ -92,6 +96,7 @@ bfrLrr_b = bfr_rr./det(1, 1);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % ASSIGN TO...
 %--------------------------------------------------------------------------
+Wbf_          = Wbf.';
 dc_m          = bd_*Wbf_m;
 intg.xqc      = xqc;
 intg.bd_      = bd_;
@@ -102,7 +107,10 @@ intg.Wbd_m    = Wbd_m;
 intg.Wbf_m    = Wbf_m;
 intg.dc_m     = dc_m;
 intg.F_dof    = inittype(1, Fh, xdc, xqc, Wbf_m);
+intg.visu     = sum(Wbf_, 2)./sum(W_, 1);
 %--------------------------------------------------------------------------
+bDl           = bdl./det;
+bDr           = bdr./det;
 bfl_          = bfl.';
 bfr_          = bfr.';
 eta           = 2;
@@ -112,8 +120,10 @@ intg.bfl      = bfl;
 intg.bfr      = bfr;
 intg.bfl_     = bfl_;
 intg.bfr_     = bfr_;
-intg.fl_M     = fl_M;
-intg.fr_M     = fr_M;
+intg.bDl_M    = bDl_M;
+intg.bDr_M    = bDr_M;
+intg.bfl_M    = bfl_M;
+intg.bfr_M    = bfr_M;
 intg.eta      = eta;
 intg.bflLll_i = bflLll_i;
 intg.bflLlr_i = bflLlr_i;

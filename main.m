@@ -7,12 +7,14 @@ close all;
 %--------------------------------------------------------------------------
 flag  = 1; % 0: w/o lifting, 1: w/ lifting
 p     = 2;
-h     = 0.05;
+h     = 0.01;
 Xvt   = 0:h:1;
 nu    = 1;
 c     = 0.5;
-uh    = @(x) sin(pi.*x);
-duh   = @(x) pi.*cos(pi.*x);
+arg   = @(x) pi.*x;
+uh    = @(x) sin(arg(x));
+d1uh  = @(x) pi.*cos(arg(x));
+ad2uh = @(x)-pi.^2.*(sin(arg(x)).^2+nu.*sin(arg(x))-cos(arg(x)).^2);
 fh    = @(x) pi.^2.*((nu+sin(pi.*x)).*sin(pi.*x)-(1+c).*cos(pi.*x).^2);
 %--------------------------------------------------------------------------
 basis = f_aux1(p);
@@ -26,14 +28,14 @@ Ke    = K+1;
 U_dof = zeros(K, p+1);
 Ulb1  =  uh(0);
 Urb2  =  uh(1);
-dUlb1 = duh(0);
-dUrb2 = duh(1);
+dUlb1 = d1uh(0);
+dUrb2 = d1uh(1);
 
-rng("default");
-U_dof = rand(size(U_dof));
-%U_dof = inittype(itype, uh, mesh.xdc, intg.xqc, intg.Wbf_m);
+%rng("default");
+%U_dof = rand(size(U_dof));
+U_dof = inittype(0, uh, mesh.xdc, intg.xqc, intg.Wbf_m);
 
 for i = 1:5
-    loop = f_loop(mesh, intg, flag, c, nu, U_dof, Ulb1, Urb2, dUlb1, dUrb2, uh, duh);
+    loop = f_loop(basis, mesh, intg, flag, c, nu, U_dof, Ulb1, Urb2, dUlb1, dUrb2, uh, d1uh, ad2uh);
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

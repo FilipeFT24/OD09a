@@ -14,12 +14,12 @@ if flag
     K                 = mesh.K;
     bfl_              = intg.bfl_;
     bfr_              = intg.bfr_;
-    fl_M              = intg.fl_M;
-    fr_M              = intg.fr_M;
-    fl_M_i            = fl_M(1:K-1, :);
-    fr_M_i            = fr_M(2:K  , :);
-    fr_Mb1            = fr_M(    1, :).*2; % {v} = value
-    fl_Mb2            = fl_M(    K, :).*2; % =
+    bfl_M             = intg.bfl_M;
+    bfr_M             = intg.bfr_M;
+    bfl_M_i           = bfl_M(1:K-1, :);
+    bfr_M_i           = bfr_M(2:K  , :);
+    bfr_Mb1           = bfr_M(    1, :); 
+    bfl_Mb2           = bfl_M(    K, :);
     %----------------------------------------------------------------------
     Ul_i              = U_dof(1:K-1, :)*bfl_;
     Ur_i              = U_dof(2:K  , :)*bfr_;
@@ -29,14 +29,14 @@ if flag
     Ujir              =-Ujil;      % <-o
     Ujb1              = Urb1-Ulb1; % <-o
     Ujb2              = Ulb2-Urb2; % o->
-    rhsiL             =-fl_M_i.*Ujil;
-    rhsiR             =-fr_M_i.*Ujir;
-    rhsb1             =-fr_Mb1.*Ujb1;
-    rhsb2             =-fl_Mb2.*Ujb2;
-    d1U_dof(1:K-1, :) = d1U_dof(1:K-1, :)+rhsiL;
-    d1U_dof(2:K  , :) = d1U_dof(2:K  , :)+rhsiR;
-    d1U_dof(    1, :) = d1U_dof(    1, :)+rhsb1;
-    d1U_dof(    K, :) = d1U_dof(    K, :)+rhsb2;
+    rhsiL             = 1./2.*bfl_M_i.*Ujil;
+    rhsiR             =-1./2.*bfr_M_i.*Ujir;
+    rhsb1             =-bfr_Mb1.*Ujb1; % {v} = v, not v/2!
+    rhsb2             = bfl_Mb2.*Ujb2; % =
+    d1U_dof(1:K-1, :) = d1U_dof(1:K-1, :)-rhsiL;
+    d1U_dof(2:K  , :) = d1U_dof(2:K  , :)-rhsiR;
+    d1U_dof(    1, :) = d1U_dof(    1, :)-rhsb1;
+    d1U_dof(    K, :) = d1U_dof(    K, :)-rhsb2;
     %----------------------------------------------------------------------
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

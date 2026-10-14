@@ -2,6 +2,18 @@
 clear;
 clc;
 close all;
+%--------------------------------------------------------------------------
+dirs = [...
+    "linspecer", ... % https://www.mathworks.com/matlabcentral/fileexchange/42673-beautiful-and-distinguishable-line-colors-colormap
+    "QuadTools", ... % https://www.mathworks.com/matlabcentral/fileexchange/72378-quadtools
+    "spinit/src"];   % https://www.mathworks.com/matlabcentral/fileexchange/30293-spinit?s_tid=srchtitle
+for i = 1:numel(dirs)
+    folder = dirs(1, i);
+    if ~isfolder(folder)
+        mkdir(folder);
+    end
+    addpath(folder);
+end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % DATA:
 %--------------------------------------------------------------------------
@@ -14,7 +26,7 @@ c     = 0.5;
 arg   = @(x) pi.*x;
 uh    = @(x) sin(arg(x));
 d1uh  = @(x) pi.*cos(arg(x));
-ad2uh = @(x)-pi.^2.*(sin(arg(x)).^2+nu.*sin(arg(x))-cos(arg(x)).^2);
+cd2uh = @(x)-pi.^2.*(sin(arg(x)).^2+nu.*sin(arg(x))-cos(arg(x)).^2);
 fh    = @(x) pi.^2.*((nu+sin(pi.*x)).*sin(pi.*x)-(1+c).*cos(pi.*x).^2);
 %--------------------------------------------------------------------------
 basis = f_aux1(p);
@@ -36,6 +48,6 @@ dUrb2 = d1uh(1);
 U_dof = inittype(0, uh, mesh.xdc, intg.xqc, intg.Wbf_m);
 
 for i = 1:5
-    loop = f_loop(basis, mesh, intg, flag, c, nu, U_dof, Ulb1, Urb2, dUlb1, dUrb2, uh, d1uh, ad2uh);
+    loop = f_loop(basis, mesh, intg, flag, c, nu, U_dof, Ulb1, Urb2, dUlb1, dUrb2, uh, d1uh, cd2uh);
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

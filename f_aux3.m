@@ -38,18 +38,22 @@ Wbf_m = Wbf/mass;
 ddr_m = zeros(N, N, R);
 dfr_m = zeros(N, N, R);
 fdr_m = zeros(N, N, R);
-DDr_M = zeros(N, N, R, K);
-DFr_M = zeros(N, N, R, K);
-FDr_M = zeros(N, N, R, K);
+NN    = N*N;
+RK    = R*K;
+DDr_M = zeros(RK, NN);
+DFr_M = zeros(RK, NN);
+FDr_M = zeros(RK, NN);
 for r = 1:R
     ddr_m(:, :, r) = Wbd_m(r, :).'*bd(r, :); % d_m*d
     dfr_m(:, :, r) = Wbd_m(r, :).'*bf(r, :); % d_m*f
     fdr_m(:, :, r) = Wbf_m(r, :).'*bd(r, :); % f_m*d
 end
 for i = 1:K
-    DDr_M(:, :, :, i) = ddr_m./det(i, 1).^3;
-    DFr_M(:, :, :, i) = ddr_m./det(i, 1).^2;
-    FDr_M(:, :, :, i) = fdr_m./det(i, 1).^2;
+    for r = 1:R
+        DDr_M((i-1)*R+r, :) = reshape(ddr_m(:, :, r).', NN, [])./det(i, 1).^3;
+        DFr_M((i-1)*R+r, :) = reshape(dfr_m(:, :, r).', NN, [])./det(i, 1).^2;
+        FDr_M((i-1)*R+r, :) = reshape(fdr_m(:, :, r).', NN, [])./det(i, 1).^2;
+    end
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % FACE:
@@ -121,10 +125,14 @@ bflLlr_b = bfl_lr./det(K, 1);
 bfrLrl_b = bfr_rl./det(1, 1);
 bfrLrr_b = bfr_rr./det(1, 1);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% ASSIGN TO...
+% FACE JAC.:
+%--------------------------------------------------------------------------
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% ASSIGN TO (CELL)...
 %--------------------------------------------------------------------------
 Wbf_          = Wbf.';
 dc_m          = bd_*Wbf_m;
+intg.R        = R;
 intg.xqc      = xqc;
 intg.bd       = bd;
 intg.bd_      = bd_;
@@ -134,8 +142,14 @@ intg.mass     = mass;
 intg.Wbd_m    = Wbd_m;
 intg.Wbf_m    = Wbf_m;
 intg.dc_m     = dc_m;
-intg.F_dof    = inittype(1, Fh, xdc, xqc, Wbf_m);
+%--------------------------------------------------------------------------
+intg.DDr_M    = DDr_M;
+intg.DFr_M    = DFr_M;
+intg.FDr_M    = FDr_M;
 intg.visu     = sum(Wbf_, 2)./sum(W_, 1);
+intg.F_dof    = inittype(1, Fh, xdc, xqc, Wbf_m);
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% ASSIGN TO (FACE)...
 %--------------------------------------------------------------------------
 bDl           = bdl./det;
 bDr           = bdr./det;
@@ -161,5 +175,6 @@ intg.bflLll_b = bflLll_b;
 intg.bflLlr_b = bflLlr_b;
 intg.bfrLrl_b = bfrLrl_b;
 intg.bfrLrr_b = bfrLrr_b;
+%--------------------------------------------------------------------------
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 end

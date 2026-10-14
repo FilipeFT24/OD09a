@@ -40,11 +40,10 @@ for i = 1:N
     end
 end
 %--------------------------------------------------------------------------
-Qs  = quadGaussLegendre(2*p+2, 'Domain', [0, 1]);
-QsP = Qs.Points;
-W_  = Qs.Weights;
-R   = size(Qs.Weights, 1);
-%--------------------------------------------------------------------------
+Qs        = quadGaussLegendre(2*p+2, 'Domain', [0, 1]);
+QsP       = Qs.Points;
+W_        = Qs.Weights;
+R         = size(Qs.Weights, 1);
 basis.dh  = dh;
 basis.fh  = fh;
 basis.xp  = xp;

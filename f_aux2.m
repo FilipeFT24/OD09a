@@ -37,7 +37,8 @@ for i = 1:Km2
     jm(2+3*(i-1)+1:2+3*i, 1) = i:i+2;
 end
 for i = 1:T
-    XT((i-1)*NN+(1:NN), :) = [repelem((im(i, 1)-1)*N+(1:N), N); repmat((jm(i, 1)-1)*N+(1:N), 1, N)].';
+    XT((i-1)*NN+(1:NN), :) = ...
+        [repelem((im(i, 1)-1)*N+(1:N), N); repmat((jm(i, 1)-1)*N+(1:N), 1, N)].';
 end
 XTi = XT(:, 1);
 XTj = XT(:, 2);

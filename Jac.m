@@ -1,4 +1,4 @@
-function [JAC] = Jac(basis, mesh, intg, flag, c, C_dof, U_dof)
+function [JAC] = Jac(basis, mesh, intg, flag, c, C_dof, U_dof, d1Ul)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % CELL:
 %--------------------------------------------------------------------------
@@ -13,18 +13,21 @@ IJu         = mesh.IJu;
 Jac         = mesh.Jac;
 bd_         = intg.bd_;
 bf_         = intg.bf_;
-DDr_M       = intg.DDr_M;
-DFr_M       = intg.DFr_M;
-FDr_M       = intg.FDr_M;
+DDr         = intg.DDr;
+DFr         = intg.DFr;
+FDr         = intg.FDr;
 val         = zeros(TNN, 1);
 %--------------------------------------------------------------------------
-d1U         = U_dof*bd_./det;
+d1Uc        = U_dof*bd_./det;
 C           = C_dof*bf_;
-d1Ut        = d1U.';
+%--------------------------------------------------------------------------
+d1Ult       = d1Ul.';
+d1Uct       = d1Uc.';
 Ct          = C.';
-d1Ut1       = d1Ut(:);
-Ct1         =   Ct(:);
-Jacd_RK_NN  =-(DDr_M+2.*c.*FDr_M).*d1Ut1-DFr_M.*Ct1;
+d1Ult1      = d1Ult(:);
+d1Uct1      = d1Uct(:);
+Ct1         =    Ct(:);
+Jacd_RK_NN  =-DFr.*d1Uct1-DDr.*Ct1+2.*c.*FDr.*d1Ult1;
 Jacd_NN_K   = sum(reshape(Jacd_RK_NN.', NN, R, []), 2);
 Jacd_NN_K_1 = Jacd_NN_K(:);
 val(IJd, 1) = Jacd_NN_K_1;

@@ -35,24 +35,24 @@ Wbf_m = Wbf/mass;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % CELL JAC.:
 %--------------------------------------------------------------------------
-ddr_m = zeros(N, N, R);
-dfr_m = zeros(N, N, R);
-fdr_m = zeros(N, N, R);
-NN    = N*N;
-RK    = R*K;
-DDr_M = zeros(RK, NN);
-DFr_M = zeros(RK, NN);
-FDr_M = zeros(RK, NN);
+ddr = zeros(N, N, R);
+dfr = zeros(N, N, R);
+fdr = zeros(N, N, R);
+NN  = N*N;
+RK  = R*K;
+DDr = zeros(RK, NN);
+DFr = zeros(RK, NN);
+FDr = zeros(RK, NN);
 for r = 1:R
-    ddr_m(:, :, r) = Wbd_m(r, :).'*bd(r, :); % d_m*d
-    dfr_m(:, :, r) = Wbd_m(r, :).'*bf(r, :); % d_m*f
-    fdr_m(:, :, r) = Wbf_m(r, :).'*bd(r, :); % f_m*d
+    ddr(:, :, r) = Wbd(r, :).'*bd(r, :); % wd*d
+    dfr(:, :, r) = Wbd(r, :).'*bf(r, :); % wd*f
+    fdr(:, :, r) = Wbf(r, :).'*bd(r, :); % wf*d
 end
 for i = 1:K
     for r = 1:R
-        DDr_M((i-1)*R+r, :) = reshape(ddr_m(:, :, r).', NN, [])./det(i, 1).^3;
-        DFr_M((i-1)*R+r, :) = reshape(dfr_m(:, :, r).', NN, [])./det(i, 1).^2;
-        FDr_M((i-1)*R+r, :) = reshape(fdr_m(:, :, r).', NN, [])./det(i, 1).^2;
+        DDr((i-1)*R+r, :) = reshape(ddr(:, :, r).', NN, [])./det(i, 1);
+        DFr((i-1)*R+r, :) = reshape(dfr(:, :, r).', NN, []);
+        FDr((i-1)*R+r, :) = reshape(fdr(:, :, r).', NN, []);
     end
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -143,9 +143,9 @@ intg.Wbd_m    = Wbd_m;
 intg.Wbf_m    = Wbf_m;
 intg.dc_m     = dc_m;
 %--------------------------------------------------------------------------
-intg.DDr_M    = DDr_M;
-intg.DFr_M    = DFr_M;
-intg.FDr_M    = FDr_M;
+intg.DDr      = DDr;
+intg.DFr      = DFr;
+intg.FDr      = FDr;
 intg.visu     = sum(Wbf_, 2)./sum(W_, 1);
 intg.F_dof    = inittype(1, Fh, xdc, xqc, Wbf_m);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

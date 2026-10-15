@@ -17,8 +17,8 @@ d2U_dofC =-Cd1U*Wbd_m./det.^2;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % FACE:
 %--------------------------------------------------------------------------
-K        = mesh.K;
 N        = basis.N;
+K        = mesh.K;
 Km1      = K-1;
 bDl      = intg.bDl;
 bDr      = intg.bDr;
@@ -28,12 +28,6 @@ bDl_M    = intg.bDl_M;
 bDr_M    = intg.bDr_M;
 bfl_M    = intg.bfl_M;
 bfr_M    = intg.bfr_M;
-bDrb1_M  = bDr_M(1, :);
-bDlb2_M  = bDl_M(K, :);
-bfrb1_M  = bfr_M(1, :);
-bflb2_M  = bfl_M(K, :);
-bfl_i_M  = bfl_M(1:Km1, :);
-bfr_i_M  = bfr_M(2:K  , :);
 bflLll_i = intg.bflLll_i;
 bflLlr_i = intg.bflLlr_i;
 bfrLrl_i = intg.bfrLrl_i;
@@ -43,6 +37,12 @@ bflLlr_b = intg.bflLlr_b;
 bfrLrl_b = intg.bfrLrl_b;
 bfrLrr_b = intg.bfrLrr_b;
 eta      = intg.eta;
+bDrb1_M  = bDr_M(1, :);
+bDlb2_M  = bDl_M(K, :);
+bfrb1_M  = bfr_M(1, :);
+bflb2_M  = bfl_M(K, :);
+bfl_i_M  = bfl_M(1:Km1, :);
+bfr_i_M  = bfr_M(2:K  , :);
 %--------------------------------------------------------------------------
 c_li     = C_dof(1:Km1, :)*bfl_;
 c_ri     = C_dof(2:K  , :)*bfr_;
@@ -175,7 +175,7 @@ F       =   F_dof_*bf_;
 d1Ul    = d1U_dofl*bf_;
 d2UC    = d2U_dofC*bf_;
 d1Ul2   = d1Ul.^2;
-R       =-d2UC+c.*d1Ul2+F;
+R       = d2UC-c.*d1Ul2-F;
 R_dof   = R*Wbf.*det;
 %--------------------------------------------------------------------------
 g.d1Ul  = d1Ul;  % aux. variable

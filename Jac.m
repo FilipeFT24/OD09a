@@ -3,12 +3,12 @@ function [MAT] = Jac(basis, mesh, intg, flag, c, C_dof, U_dof, d1Ul)
 % CELL:
 %--------------------------------------------------------------------------
 N            = basis.N;
-R            = intg.R;
 NN           = N*N;
 det          = mesh.det;
 TNN          = mesh.TNN;
 IJd_         = mesh.IJd_;
 Mat          = mesh.Jac;
+R            = intg.R;
 bd_          = intg.bd_;
 bf_          = intg.bf_;
 DDr          = intg.DDr;
@@ -24,45 +24,59 @@ Ct           = C.';
 d1Ult1       = d1Ult(:);
 d1Uct1       = d1Uct(:);
 Ct1          =    Ct(:);
-Jacd_RK_NN   =-DFr.*d1Uct1-DDr.*Ct1+2.*c.*FDr.*d1Ult1;
+Jacd_RK_NN   = DFr.*d1Uct1+DDr.*Ct1-2.*c.*FDr.*d1Ult1;
 Jacd_NN_K    = sum(reshape(Jacd_RK_NN.', NN, R, []), 2);
 Jacd_NN_K_1  = Jacd_NN_K(:);
 val(IJd_, 1) = Jacd_NN_K_1;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % FACE:
 %--------------------------------------------------------------------------
-K     = mesh.K;
-Km1   = K-1;
-IJdl  = mesh.IJdl; % ll
-IJol  = mesh.IJol; % lr
-IJor  = mesh.IJor; % rl
-IJdr  = mesh.IJdr; % rr
-bfl_  = intg.bfl_;
-bfr_  = intg.bfr_;
-ul_i  = U_dof(1:Km1, :)*bfl_;
-ur_i  = U_dof(2:K  , :)*bfr_;
-ul_it = ul_i.';
-ur_it = ur_i.';
+K    = mesh.K;
+IJdl = mesh.IJdl; % ll
+IJol = mesh.IJol; % lr
+IJor = mesh.IJor; % rl
+IJdr = mesh.IJdr; % rr
+IJb1 = mesh.IJb1; % rrb1
+IJb2 = mesh.IJb2; % llb2
+Km1  = K-1;
 %--------------------------------------------------------------------------
 if flag
     %----------------------------------------------------------------------
-    %----------------------------------------------------------------------
-    val = val.*0;
-
-
-
-    Jacll_i   =-1./2.*FFll.*ll_it; % (-   = -) o-> (int)
-    Jaclr_i   = 1./2.*FFlr.*lr_it; % (--  = +) o-> (ext) 
-    Jacrl_i   =-1./2.*FFrl.*rl_it; % (--- = -) <-o (ext)
-    Jacrr_i   = 1./2.*FFrr.*rr_it; % (--  = +) <-o (int)
-    Jacll_i_1 = Jacll_i(:);
-    Jaclr_i_1 = Jaclr_i(:);
-    Jacrl_i_1 = Jacrl_i(:);
-    Jacrr_i_1 = Jacrr_i(:);
-    val(IJdl) = val(IJdl)+Jacll_i_1;
-    val(IJol) = Jaclr_i_1;
-    val(IJor) = Jacrl_i_1;
-    val(IJdr) = val(IJdr)+Jacrr_i_1;
+    Wbf         = intg.Wbf;
+    bfLll_it    = intg.bfLll_it;
+    bfLlr_it    = intg.bfLlr_it;
+    bfLrl_it    = intg.bfLrl_it;
+    bfLrr_it    = intg.bfLrr_it;
+    bfLrrb1t    = intg.bfLrrb1t;
+    bfLllb2t    = intg.bfLllb2t;
+    JLll_it     = zeros(N, N, Km1);
+    JLlr_it     = zeros(N, N, Km1);
+    JLrl_it     = zeros(N, N, Km1);
+    JLrr_it     = zeros(N, N, Km1);
+    for i = 1:Km1
+        JLll_it(:, :, i) =-bfLll_it(:, :, i)*(-2.*c.*d1Ult(:, i  ).*Wbf.*det(i  , 1));
+        JLlr_it(:, :, i) =-bfLlr_it(:, :, i)*(-2.*c.*d1Ult(:, i  ).*Wbf.*det(i  , 1));
+        JLrl_it(:, :, i) =-bfLrl_it(:, :, i)*(-2.*c.*d1Ult(:, i+1).*Wbf.*det(i+1, 1));
+        JLrr_it(:, :, i) =-bfLrr_it(:, :, i)*(-2.*c.*d1Ult(:, i+1).*Wbf.*det(i+1, 1));
+    end
+    JLrrb1t     =-bfLrrb1t*(-2.*c.*d1Ult(:, 1).*Wbf.*det(1, 1));
+    JLllb2t     =-bfLllb2t*(-2.*c.*d1Ult(:, K).*Wbf.*det(K, 1));
+    JLll_it     = reshape(JLll_it, [NN, Km1]);
+    JLlr_it     = reshape(JLlr_it, [NN, Km1]);
+    JLrl_it     = reshape(JLrl_it, [NN, Km1]);
+    JLrr_it     = reshape(JLrr_it, [NN, Km1]);
+    VALdil_NN_1 = JLll_it(:);
+    VALoil_NN_1 = JLlr_it(:);
+    VALoir_NN_1 = JLrl_it(:);
+    VALdir_NN_1 = JLrr_it(:);
+    VALdb1_NN_1 = JLrrb1t(:);
+    VALdb2_NN_1 = JLllb2t(:);
+    val(IJdl)   = val(IJdl)+VALdil_NN_1;
+    val(IJol)   = VALoil_NN_1;
+    val(IJor)   = VALoir_NN_1;
+    val(IJdr)   = val(IJdr)+VALdir_NN_1;
+    val(IJb1)   = val(IJb1)+VALdb1_NN_1;
+    val(IJb2)   = val(IJb2)+VALdb2_NN_1;
     %----------------------------------------------------------------------
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -70,25 +84,29 @@ end
 %--------------------------------------------------------------------------
 MAT = Mat(val);
 
-JACf = full(MAT);
-K    = mesh.K;
-soll = zeros(N, N, Km1);
-solu = zeros(N, N, Km1);
-mass = intg.mass;
-minv = inv(mass);
-for i = 1:K
-    if i > 1
-        soll(:, :, i) =-JACf((i-1)*N+(1:N), (i-2)*N+(1:N));
-    end
-    if i < K
-        solu(:, :, i) =-JACf((i-1)*N+(1:N), (i)*N+(1:N));
-    end
-end
-val   = load("this.mat");
-val1  = val.jac;
 
-diff1 = val1-soll;
-diffM = max(abs(diff1), [], 'all')
+% dia = load("mat_d.mat"); matd = dia.Jd;
+% low = load("mat_l.mat"); matl = low.Jlo;
+% upp = load("mat_u.mat"); matu = upp.Jup;
+% 
+% soll = zeros(N, N, K);
+% solu = zeros(N, N, K);
+% sold = zeros(N, N, K);
+% for i = 1:K
+%     sold(:, :, i) = MAT((i-1)*N+(1:N), (i-1)*N+(1:N));
+%     if i > 1
+%         soll(:, :, i) = MAT((i-1)*N+(1:N), (i-2)*N+(1:N));
+%     end
+%     if i < K
+%         solu(:, :, i) = MAT((i-1)*N+(1:N), (i)*N+(1:N));
+%     end
+% end
+% A = full(MAT);
+% 
+% diffd = sold-matd; max(abs(diffd), [], 'all')
+% diffu = solu-matu; max(abs(diffu), [], 'all')
+% diffl = soll-matl; max(abs(diffl), [], 'all')
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 end

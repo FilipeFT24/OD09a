@@ -6,7 +6,8 @@ close all;
 dirs = [...
     "linspecer", ... % https://www.mathworks.com/matlabcentral/fileexchange/42673-beautiful-and-distinguishable-line-colors-colormap
     "QuadTools", ... % https://www.mathworks.com/matlabcentral/fileexchange/72378-quadtools
-    "spinit/src"];   % https://www.mathworks.com/matlabcentral/fileexchange/30293-spinit?s_tid=srchtitle
+    "spinit/src", ... % https://www.mathworks.com/matlabcentral/fileexchange/30293-spinit?s_tid=srchtitle
+    "debug"];
 for i = 1:numel(dirs)
     folder = dirs(1, i);
     if ~isfolder(folder)
@@ -22,10 +23,10 @@ p     = 2;
 h     = 0.05;
 Xvt   = 0:h:1;
 
-Xvt(1, 2) = 0.01;
-Xvt(1, 3) = 0.072;
-Xvt(1, 4) = 0.123;
-Xvt(1, 7) = 0.265;
+% Xvt(1, 2) = 0.01;
+% Xvt(1, 3) = 0.072;
+% Xvt(1, 4) = 0.123;
+% Xvt(1, 7) = 0.265;
 
 nu    = 1;
 c     = 0.5;
@@ -38,8 +39,12 @@ fh    = @(x) pi.^2.*((nu+sin(pi.*x)).*sin(pi.*x)-(1+c).*cos(pi.*x).^2);
 basis = f_aux1(p);
 mesh  = f_aux2(basis, Xvt);
 intg  = f_aux3(basis, mesh, fh);
+visu  = intg.visu;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % LOOP:
+%--------------------------------------------------------------------------
+delta = realmax;
+tol   = 1e-12;
 %--------------------------------------------------------------------------
 K     = mesh.K;
 Ke    = K+1;
@@ -48,12 +53,14 @@ ulb1  =   uh(0);
 urb2  =   uh(1);
 dlb1  = d1uh(0);
 drb2  = d1uh(1);
+%--------------------------------------------------------------------------
 
 rng("default");
 U_dof = rand(size(U_dof));
 %U_dof = inittype(0, uh, mesh.xdc, intg.xqc, intg.Wbf_m);
+%U_dof = zeros(K, p+1);
 
-for i = 1:5
+while delta > tol
     %----------------------------------------------------------------------
     C_dof  = nu+U_dof;
     clb1   = nu+ulb1;
@@ -66,18 +73,14 @@ for i = 1:5
     R_doft = R_dof.';
     R1doft = R_doft(:);
     X1doft = J_mat\R1doft;
-    X1dof  = reshape(X1doft, [], K).';
-    U_dof  = X1dof;
+    X1dof  = reshape(X1doft, [], K).'; % \delta u
+    U_dof  = U_dof-X1dof;
 
-%     val = load("this.mat");
-%     val1 = val.res;
-% 
-%     diff1 = val1+d2U_dof;%-R_dof;
-%     max(abs(diff1), [], 'all')
-%     figure;
-%     hold on;
-%     plot(R_dof*intg.visu);
+    figure;
+    hold on;
+    plot(U_dof*visu, '-b');
 
+    delta  = norm(X1dof, inf);
     %----------------------------------------------------------------------
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

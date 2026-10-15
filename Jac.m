@@ -1,4 +1,4 @@
-function [MAT] = Jac(basis, mesh, intg, flag, c, C_dof, U_dof, d1Ul)
+function [MAT] = Jac(basis, mesh, intg, flag, c, C_dof, U_dof, d1Ul, d1Ux) %#ok<INUSD> 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % CELL:
 %--------------------------------------------------------------------------
@@ -78,6 +78,23 @@ if flag
     val(IJb1)   = val(IJb1)+VALdb1_NN_1;
     val(IJb2)   = val(IJb2)+VALdb2_NN_1;
     %----------------------------------------------------------------------
+    %{
+    aux         = zeros(TNN);
+    aux(IJdl)   = aux(IJdl)+VALdil_NN_1;
+    aux(IJol)   = VALoil_NN_1;
+    aux(IJor)   = VALoir_NN_1;
+    aux(IJdr)   = aux(IJdr)+VALdir_NN_1;
+    aux(IJb1)   = aux(IJb1)+VALdb1_NN_1;
+    aux(IJb2)   = aux(IJb2)+VALdb2_NN_1;
+    AUX         = Mat(aux);
+    B_doft      = U_dof.';
+    B1doft      = B_doft(:);
+    X1doft      = AUX*B1doft;
+    X1dofI      = reshape(X1doft, [], K).';
+    X1dofE      =-2.*c.*d1Ul.*d1Ux*Wbf.*det;
+    diffl1      = X1dofI-X1dofE; max(abs(diffl1), [], 'all')
+    %}
+    %----------------------------------------------------------------------
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % ASSEMBLE JACOBIAN:
@@ -106,7 +123,6 @@ MAT = Mat(val);
 % diffd = sold-matd; max(abs(diffd), [], 'all')
 % diffu = solu-matu; max(abs(diffu), [], 'all')
 % diffl = soll-matl; max(abs(diffl), [], 'all')
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 end

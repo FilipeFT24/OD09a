@@ -67,7 +67,8 @@ while delta > tol
     crb2   = nu+urb2;
     g      = Res(basis, mesh, intg, flag, c, C_dof, U_dof, clb1, crb2, ulb1, urb2, dlb1, drb2, uh, d1uh, cd2uh);
     d1Ul   = g.d1Ul;
-    J_mat  = Jac(basis, mesh, intg, flag, c, C_dof, U_dof, d1Ul); % this "d1U" already contains the lifting contribution!
+    d1Ux   = g.d1Ux;
+    J_mat  = Jac(basis, mesh, intg, flag, c, C_dof, U_dof, d1Ul, d1Ux); % this "d1U" already contains the lifting contribution!
     %----------------------------------------------------------------------
     R_dof  = g.R_dof;
     R_doft = R_dof.';

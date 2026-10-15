@@ -2,12 +2,15 @@ function [g] = Res(basis, mesh, intg, flag, c, C_dof, U_dof, clb1, crb2, ulb1, u
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % CELL:
 %--------------------------------------------------------------------------
+N        = basis.N;
+K        = mesh.K;
 det      = mesh.det;
 bd_      = intg.bd_;
 bf_      = intg.bf_;
 Wbf      = intg.Wbf;
 Wbd_m    = intg.Wbd_m;
 dc_m     = intg.dc_m;
+d1U_dofx = zeros(K, N); % aux. variable (using for debugging later on)
 %--------------------------------------------------------------------------
 C        = C_dof*bf_;
 d1U      = U_dof*bd_;
@@ -17,8 +20,6 @@ d2U_dofC =-Cd1U*Wbd_m./det.^2;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % FACE:
 %--------------------------------------------------------------------------
-N        = basis.N;
-K        = mesh.K;
 Km1      = K-1;
 bDl      = intg.bDl;
 bDr      = intg.bDr;
@@ -85,10 +86,12 @@ if flag
     rhsiR              =-1./2.*bfr_i_M.*ujir;
     rhsb1              =-bfrb1_M.*ujb1; % {v} = v, not v/2!
     rhsb2              = bflb2_M.*ujb2; % =
-    d1U_dofl(1:Km1, :) = d1U_dofl(1:Km1, :)-rhsiL;
-    d1U_dofl(2:K  , :) = d1U_dofl(2:K  , :)-rhsiR;
-    d1U_dofl(    1, :) = d1U_dofl(    1, :)-rhsb1;
-    d1U_dofl(    K, :) = d1U_dofl(    K, :)-rhsb2;
+    d1U_dofx(1:Km1, :) = d1U_dofx(1:Km1, :)-rhsiL;
+    d1U_dofx(2:K  , :) = d1U_dofx(2:K  , :)-rhsiR;
+    d1U_dofx(    1, :) = d1U_dofx(    1, :)-rhsb1;
+    d1U_dofx(    K, :) = d1U_dofx(    K, :)-rhsb2;
+    d1U_dofl           = ...
+        d1U_dofl+d1U_dofx;
     %----------------------------------------------------------------------
     %{
     ffll_mt            = intg.ffll_mt;
@@ -173,12 +176,14 @@ d2U_dofC(K, :) = ...
 F_dof_  = intg.F_dof;
 F       =   F_dof_*bf_;
 d1Ul    = d1U_dofl*bf_;
+d1Ux    = d1U_dofx*bf_;
 d2UC    = d2U_dofC*bf_;
 d1Ul2   = d1Ul.^2;
 R       = d2UC-c.*d1Ul2-F;
 R_dof   = R*Wbf.*det;
 %--------------------------------------------------------------------------
 g.d1Ul  = d1Ul;  % aux. variable
+g.d1Ux  = d1Ux;  % aux. variable (using for debugging later on)
 g.R_dof = R_dof; % residual
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % CHECK:

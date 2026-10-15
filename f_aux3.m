@@ -3,6 +3,7 @@ function [intg] = f_aux3(basis, mesh, Fh)
 % CELL:
 %--------------------------------------------------------------------------
 K   = mesh.K;
+Km1 = K-1;
 det = mesh.det;
 V0T = mesh.V0T;
 xdc = mesh.xdc;
@@ -33,7 +34,7 @@ mass  = bf_*Wbf;
 Wbd_m = Wbd/mass;
 Wbf_m = Wbf/mass;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% CELL JAC.:
+% CELL JACOBIAN:
 %--------------------------------------------------------------------------
 ddr = zeros(N, N, R);
 dfr = zeros(N, N, R);
@@ -91,25 +92,24 @@ fflr = zeros(N, N);
 ffrl = zeros(N, N);
 ffrr = zeros(N, N);
 for j = 1:N
-    ffll(:, j) = bfl.*bfl(:, j); % E (<-)
-    fflr(:, j) = bfl.*bfr(:, j); % E (<-)
-    ffrl(:, j) = bfr.*bfl(:, j); % W (->)
-    ffrr(:, j) = bfr.*bfr(:, j); % W (->)
+    ffll(:, j) = bfl.*bfl(:, j);
+    fflr(:, j) = bfl.*bfr(:, j);
+    ffrl(:, j) = bfr.*bfl(:, j);
+    ffrr(:, j) = bfr.*bfr(:, j);
 end
 %}
 ffll     = bfl_*bfl;
 fflr     = bfl_*bfr;
 ffrl     = bfr_*bfl;
 ffrr     = bfr_*bfr;
-ffll3_m  = mass\ffll;
-fflr3_m  = mass\fflr;
-ffrl3_m  =-mass\ffrl;
-ffrr3_m  =-mass\ffrr;
-bfl_ll   = bfl*ffll3_m./2;
-bfl_lr   =-bfl*fflr3_m./2;
-bfr_rl   =-bfr*ffrl3_m./2;
-bfr_rr   = bfr*ffrr3_m./2;
-Km1      = K-1;
+ffll_m   = mass\ffll;
+fflr_m   = mass\fflr;
+ffrl_m   =-mass\ffrl;
+ffrr_m   =-mass\ffrr;
+bfl_ll   = bfl*ffll_m./2;
+bfl_lr   =-bfl*fflr_m./2;
+bfr_rl   =-bfr*ffrl_m./2;
+bfr_rr   = bfr*ffrr_m./2;
 bflLll_i = zeros(Km1, N);
 bflLlr_i = zeros(Km1, N);
 bfrLrl_i = zeros(Km1, N);
@@ -125,7 +125,23 @@ bflLlr_b = bfl_lr./det(K, 1);
 bfrLrl_b = bfr_rl./det(1, 1);
 bfrLrr_b = bfr_rr./det(1, 1);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% FACE JAC.:
+% FACE JACOBIAN:
+%--------------------------------------------------------------------------
+ffll_mt = ffll_m.';
+fflr_mt = fflr_m.';
+ffrl_mt = ffrl_m.';
+ffrr_mt = ffrr_m.';
+Lll_i   = zeros(N, N, Km1);
+Llr_i   = zeros(N, N, Km1);
+Lrl_i   = zeros(N, N, Km1);
+Lrr_i   = zeros(N, N, Km1);
+L_i     = zeros(N, N, K);
+for i = 1:Km1
+    Lll_i(:, :, i) = 1./2.*ffll_mt./det(i  , 1);
+    Llr_i(:, :, i) =-1./2.*fflr_mt./det(i  , 1);
+    Lrl_i(:, :, i) =-1./2.*ffrl_mt./det(i+1, 1);
+    Lrr_i(:, :, i) = 1./2.*ffrr_mt./det(i+1, 1);
+end
 %--------------------------------------------------------------------------
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % ASSIGN TO (CELL)...
@@ -176,5 +192,41 @@ intg.bflLlr_b = bflLlr_b;
 intg.bfrLrl_b = bfrLrl_b;
 intg.bfrLrr_b = bfrLrr_b;
 %--------------------------------------------------------------------------
+%{
+TNN           = mesh.TNN;
+IJdl          = mesh.IJdl; % ll
+IJol          = mesh.IJol; % lr
+IJor          = mesh.IJor; % rl
+IJdr          = mesh.IJdr; % rr
+IJb1          = mesh.IJb1; % rrb1
+IJb2          = mesh.IJb2; % llb2
+JAUX          = mesh.Jaux; % aux. matrix (for debugging)
+VALL          = zeros(TNN, 1);
+Lll_i_res     = reshape(Lll_i, [NN, Km1]);
+Llr_i_res     = reshape(Llr_i, [NN, Km1]);
+Lrl_i_res     = reshape(Lrl_i, [NN, Km1]);
+Lrr_i_res     = reshape(Lrr_i, [NN, Km1]);
+Lrrb1         = ffrr_mt./det(1, 1);
+Lllb2         = ffll_mt./det(K, 1);
+VALLdil_NN_1  = Lll_i_res(:);
+VALLoil_NN_1  = Llr_i_res(:);
+VALLoir_NN_1  = Lrl_i_res(:);
+VALLdir_NN_1  = Lrr_i_res(:);
+VALLdb1_NN_1  = Lrrb1    (:);
+VALLdb2_NN_1  = Lllb2    (:);
+VALL(IJdl)    = VALL(IJdl)+VALLdil_NN_1;
+VALL(IJol)    = VALLoil_NN_1;
+VALL(IJor)    = VALLoir_NN_1;
+VALL(IJdr)    = VALL(IJdr)+VALLdir_NN_1;
+VALL(IJb1)    = VALL(IJb1)+VALLdb1_NN_1;
+VALL(IJb2)    = VALL(IJb2)+VALLdb2_NN_1;
+MATL          = JAUX(VALL);
+intg.ffll_mt  = ffll_mt; % DEBUG
+intg.fflr_mt  = fflr_mt;
+intg.ffrl_mt  = ffrl_mt;
+intg.ffrr_mt  = ffrr_mt;
+intg.MATL     = MATL;
+%}
+intg.L_i      = L_i;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 end

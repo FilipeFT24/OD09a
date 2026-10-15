@@ -32,7 +32,7 @@ bDrb1_M  = bDr_M(1, :);
 bDlb2_M  = bDl_M(K, :);
 bfrb1_M  = bfr_M(1, :);
 bflb2_M  = bfl_M(K, :);
-bfl_i_M  = bfl_M(1:K-1, :);
+bfl_i_M  = bfl_M(1:Km1, :);
 bfr_i_M  = bfr_M(2:K  , :);
 bflLll_i = intg.bflLll_i;
 bflLlr_i = intg.bflLlr_i;
@@ -76,6 +76,7 @@ alb2     = (bflLll_b*U_dof(K, :).'+0)./2;
 arb2     = (bfrLrl_b*U_dof(K, :).'+0)./2;
 %--------------------------------------------------------------------------
 if flag
+    %----------------------------------------------------------------------
     ujil               = ul_i-ur_i; % o->
     ujir               =-ujil;      % <-o
     ujb1               = urb1-ulb1; % <-o
@@ -88,6 +89,42 @@ if flag
     d1U_dofl(2:K  , :) = d1U_dofl(2:K  , :)-rhsiR;
     d1U_dofl(    1, :) = d1U_dofl(    1, :)-rhsb1;
     d1U_dofl(    K, :) = d1U_dofl(    K, :)-rhsb2;
+    %----------------------------------------------------------------------
+    %{
+    ffll_mt            = intg.ffll_mt;
+    fflr_mt            = intg.fflr_mt;
+    ffrl_mt            = intg.ffrl_mt;
+    ffrr_mt            = intg.ffrr_mt;
+    U_dofl_i           = U_dof(1:Km1, :);
+    U_dofr_i           = U_dof(2:K  , :);
+    detl_i             = det  (1:Km1, 1);
+    detr_i             = det  (2:K  , 1);
+    rhsiLI             = 1./2.*(U_dofl_i*ffll_mt-U_dofr_i*fflr_mt)./detl_i;
+    rhsiRI             = 1./2.*(U_dofr_i*ffrr_mt-U_dofl_i*ffrl_mt)./detr_i;
+    rhsb1I             = U_dof(1, :)*ffrr_mt./det(1, 1)-bfrb1_M.*ulb1;
+    rhsb2I             = U_dof(K, :)*ffll_mt./det(K, 1)-bflb2_M.*urb2;
+    %
+    lift1              = zeros(K, N);
+    lift1(1:Km1, :)    = lift1(1:Km1, :)-rhsiLI;
+    lift1(2:K  , :)    = lift1(2:K  , :)-rhsiRI;
+    lift1(    1, :)    = lift1(    1, :)-rhsb1I;
+    lift1(    K, :)    = lift1(    K, :)-rhsb2I;
+    MATL               = intg.MATL;
+    RHSL               = zeros(K, N);
+    RHSL(1, :)         = bfrb1_M.*ulb1;
+    RHSL(K, :)         = bflb2_M.*urb2;
+    U_doft             = U_dof.';
+    U                  = U_doft(:);
+    lift1I_1           =-MATL*U;
+    lift1I             = reshape(lift1I_1, [], K).';
+    lift1I             = lift1I+RHSL;
+    diffl1             = rhsiL-rhsiLI; max(abs(diffl1), [], 'all')
+    diffr1             = rhsiR-rhsiRI; max(abs(diffr1), [], 'all')
+    diffl2             = rhsb1-rhsb1I; max(abs(diffl2), [], 'all')
+    diffr2             = rhsb2-rhsb2I; max(abs(diffr2), [], 'all')
+    diff_3             = lift1-lift1I; max(abs(diff_3), [], 'all')
+    %}
+    %----------------------------------------------------------------------
 end
 %--------------------------------------------------------------------------
 for i = 1:K

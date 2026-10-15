@@ -21,6 +21,12 @@ flag  = 1; % 0: w/o lifting, 1: w/ lifting
 p     = 2;
 h     = 0.05;
 Xvt   = 0:h:1;
+
+Xvt(1, 2) = 0.01;
+Xvt(1, 3) = 0.072;
+Xvt(1, 4) = 0.123;
+Xvt(1, 7) = 0.265;
+
 nu    = 1;
 c     = 0.5;
 arg   = @(x) pi.*x;

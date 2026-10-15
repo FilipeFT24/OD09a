@@ -25,6 +25,7 @@ T            = 3*K-2;
 Tm1          = T-1;
 KN           = K*N;
 TNN          = T*NN;
+Km1NN        = Km1*NN;
 im           = zeros(T  , 1);
 jm           = zeros(T  , 1);
 XT           = zeros(TNN, 2);
@@ -40,22 +41,31 @@ for i = 1:T
     XT((i-1)*NN+(1:NN), :) = ...
         [repelem((im(i, 1)-1)*N+(1:N), N); repmat((jm(i, 1)-1)*N+(1:N), 1, N)].';
 end
-XTi = XT(:, 1);
-XTj = XT(:, 2);
-IJd = reshape(((3+3*((1:K  ).'-2))*NN+(1:NN)).', [], 1); % diag.
-IJl = reshape(((2+3*((2:K  ).'-2))*NN+(1:NN)).', [], 1); % diag. lower (off-diag. blocks)
-IJu = reshape(((4+3*((1:Km1).'-2))*NN+(1:NN)).', [], 1); % diag. upper (off-diag. blocks)
+XT_i = XT(:, 1);
+XT_j = XT(:, 2);
+IJd_ = reshape(((3+3*((1:K  ).'-2))*NN+(1:NN)).', [], 1); % diag.
+IJor = reshape(((2+3*((2:K  ).'-2))*NN+(1:NN)).', [], 1); % diag. lower (off-diag. blocks of r cell)
+IJol = reshape(((4+3*((1:Km1).'-2))*NN+(1:NN)).', [], 1); % diag. upper (off-diag. blocks of l cell)
+IJdl = IJd_( 0*NN+(1:Km1NN), 1);
+IJdr = IJd_( 1*NN+(1:Km1NN), 1);
+IJb1 = IJd_( 0*NN+(1:NN)   , 1);
+IJb2 = IJd_(Km1NN+(1:NN)   , 1);
 %--------------------------------------------------------------------------
-mesh.K   = K;
-mesh.Xc  = Xc;
-mesh.Xv  = Xv;
-mesh.det = det;
-mesh.V0T = V0V;
-mesh.xdc = xdc;
-mesh.TNN = TNN;
-mesh.IJd = IJd;
-mesh.IJl = IJl;
-mesh.IJu = IJu;
-mesh.Jac = spinit(XTi, XTj, [KN, KN]);
+mesh.K    = K;
+mesh.Xc   = Xc;
+mesh.Xv   = Xv;
+mesh.det  = det;
+mesh.V0T  = V0V;
+mesh.xdc  = xdc;
+mesh.TNN  = TNN;
+mesh.IJd_ = IJd_; % cell
+mesh.IJdl = IJdl; % fint ll
+mesh.IJdr = IJdr; % face rr
+mesh.IJol = IJol; % face lr
+mesh.IJor = IJor; % face rl
+mesh.IJb1 = IJb1; % bnd1
+mesh.IJb2 = IJb2; % bnd2
+mesh.Jaux = spinit(XT_i, XT_j, [KN, KN]);
+mesh.Jac  = spinit(XT_i, XT_j, [KN, KN]);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 end

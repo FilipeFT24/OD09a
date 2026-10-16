@@ -1,4 +1,4 @@
-function [MAT] = Jac(basis, mesh, intg, flag, c, C_dof, U_dof, d1Ul, d1Ux) %#ok<INUSD> 
+function [MAT] = Jac(basis, mesh, intg, flag, c, C_dof, U_dof, ulb1, urb2, d1Ul, d1Ux) %#ok<INUSD> 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % CELL:
 %--------------------------------------------------------------------------
@@ -47,8 +47,10 @@ if flag
     bfLlr_it    = intg.bfLlr_it;
     bfLrl_it    = intg.bfLrl_it;
     bfLrr_it    = intg.bfLrr_it;
-    bfLrrb1t    = intg.bfLrrb1t;
-    bfLllb2t    = intg.bfLllb2t;
+    bfLrrb1t    = intg.bfLrrb1t; % rr
+    bfLrlb1t    = intg.bfLrlb1t; % rl
+    bfLllb2t    = intg.bfLllb2t; % ll
+    bfLlrb2t    = intg.bfLlrb2t; % lr
     JLll_it     = zeros(N, N, Km1);
     JLlr_it     = zeros(N, N, Km1);
     JLrl_it     = zeros(N, N, Km1);
@@ -59,7 +61,7 @@ if flag
         JLrl_it(:, :, i) =-bfLrl_it(:, :, i)*(-2.*c.*d1Ult(:, i+1).*Wbf.*det(i+1, 1));
         JLrr_it(:, :, i) =-bfLrr_it(:, :, i)*(-2.*c.*d1Ult(:, i+1).*Wbf.*det(i+1, 1));
     end
-    JLrrb1t     =-bfLrrb1t*(-2.*c.*d1Ult(:, 1).*Wbf.*det(1, 1));
+    JLrrb1t     = bfLrrb1t*(-2.*c.*d1Ult(:, 1).*Wbf.*det(1, 1));
     JLllb2t     =-bfLllb2t*(-2.*c.*d1Ult(:, K).*Wbf.*det(K, 1));
     JLll_it     = reshape(JLll_it, [NN, Km1]);
     JLlr_it     = reshape(JLlr_it, [NN, Km1]);
@@ -78,7 +80,7 @@ if flag
     val(IJb1)   = val(IJb1)+VALdb1_NN_1;
     val(IJb2)   = val(IJb2)+VALdb2_NN_1;
     %----------------------------------------------------------------------
-    %{
+    %
     aux         = zeros(TNN);
     aux(IJdl)   = aux(IJdl)+VALdil_NN_1;
     aux(IJol)   = VALoil_NN_1;
@@ -87,10 +89,13 @@ if flag
     aux(IJb1)   = aux(IJb1)+VALdb1_NN_1;
     aux(IJb2)   = aux(IJb2)+VALdb2_NN_1;
     AUX         = Mat(aux);
+    RHSL        = zeros(K, N);
+    RHSL(1, :)  = ulb1.*bfLrlb1t*(-2.*c.*d1Ult(:, 1).*Wbf.*det(1, 1));
+    RHSL(K, :)  = urb2.*bfLlrb2t*(-2.*c.*d1Ult(:, K).*Wbf.*det(K, 1));
     B_doft      = U_dof.';
     B1doft      = B_doft(:);
     X1doft      = AUX*B1doft;
-    X1dofI      = reshape(X1doft, [], K).';
+    X1dofI      = reshape(X1doft, [], K).'+RHSL;
     X1dofE      =-2.*c.*d1Ul.*d1Ux*Wbf.*det;
     diffl1      = X1dofI-X1dofE; max(abs(diffl1), [], 'all')
     %}

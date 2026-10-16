@@ -23,10 +23,10 @@ p     = 2;
 h     = 0.05;
 Xvt   = 0:h:1;
 
-% Xvt(1, 2) = 0.01;
-% Xvt(1, 3) = 0.072;
-% Xvt(1, 4) = 0.123;
-% Xvt(1, 7) = 0.265;
+Xvt(1, 2) = 0.01;
+Xvt(1, 3) = 0.072;
+Xvt(1, 4) = 0.123;
+Xvt(1, 7) = 0.265;
 
 nu    = 1;
 c     = 0.5;
@@ -49,8 +49,8 @@ tol   = 1e-12;
 K     = mesh.K;
 Ke    = K+1;
 U_dof = zeros(K, p+1);
-ulb1  =   uh(0);
-urb2  =   uh(1);
+ulb1  =  1.5;%uh(0);
+urb2  = 2.25;%uh(1);
 dlb1  = d1uh(0);
 drb2  = d1uh(1);
 %--------------------------------------------------------------------------
@@ -68,7 +68,7 @@ while delta > tol
     g      = Res(basis, mesh, intg, flag, c, C_dof, U_dof, clb1, crb2, ulb1, urb2, dlb1, drb2, uh, d1uh, cd2uh);
     d1Ul   = g.d1Ul;
     d1Ux   = g.d1Ux;
-    J_mat  = Jac(basis, mesh, intg, flag, c, C_dof, U_dof, d1Ul, d1Ux); % this "d1U" already contains the lifting contribution!
+    J_mat  = Jac(basis, mesh, intg, flag, c, C_dof, U_dof, ulb1, urb2, d1Ul, d1Ux); % this "d1U" already contains the lifting contribution!
     %----------------------------------------------------------------------
     R_dof  = g.R_dof;
     R_doft = R_dof.';

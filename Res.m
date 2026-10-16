@@ -104,7 +104,7 @@ if flag
     detr_i             = det  (2:K  , 1);
     rhsiLI             = 1./2.*(U_dofl_i*ffll_mt-U_dofr_i*fflr_mt)./detl_i;
     rhsiRI             = 1./2.*(U_dofr_i*ffrr_mt-U_dofl_i*ffrl_mt)./detr_i;
-    rhsb1I             = U_dof(1, :)*ffrr_mt./det(1, 1)-bfrb1_M.*ulb1;
+    rhsb1I             = U_dof(1, :)*ffrr_mt./det(1, 1)+bfrb1_M.*ulb1;
     rhsb2I             = U_dof(K, :)*ffll_mt./det(K, 1)-bflb2_M.*urb2;
     %
     lift1              = zeros(K, N);
@@ -114,7 +114,7 @@ if flag
     lift1(    K, :)    = lift1(    K, :)-rhsb2I;
     MATL               = intg.MATL;
     RHSL               = zeros(K, N);
-    RHSL(1, :)         = bfrb1_M.*ulb1;
+    RHSL(1, :)         =-bfrb1_M.*ulb1;
     RHSL(K, :)         = bflb2_M.*urb2;
     U_doft             = U_dof.';
     U                  = U_doft(:);
@@ -194,7 +194,7 @@ d2UadofC = inittype(1, cd2uh, mesh.xdc, intg.xqc, intg.Wbf_m);
 figure;
 subplot(1, 2, 1);
 hold on;
-plot(d1U_dof_*intg.visu, '-r');
+plot(d1U_dofl*intg.visu, '-r');
 plot(d1Uadof_*intg.visu, 'og');
 subplot(1, 2, 2);
 hold on;

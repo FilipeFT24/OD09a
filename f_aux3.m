@@ -75,8 +75,8 @@ bfl_  = bfl.';
 bfr_  = bfr.';
 bdl_m = bdl/mass;
 bdr_m = bdr/mass;
-bfl_m = bfl/mass;
-bfr_m = bfr/mass;
+bfl__m_ = bfl/mass;
+bfr__m_ = bfr/mass;
 bDl_M = zeros(K, N);
 bDr_M = zeros(K, N);
 bfl_M = zeros(K, N);
@@ -84,8 +84,8 @@ bfr_M = zeros(K, N);
 for i = 1:K
     bDl_M(i, :) = bdl_m./det(i, 1).^2;
     bDr_M(i, :) = bdr_m./det(i, 1).^2;
-    bfl_M(i, :) = bfl_m./det(i, 1);
-    bfr_M(i, :) = bfr_m./det(i, 1);
+    bfl_M(i, :) = bfl__m_./det(i, 1);
+    bfr_M(i, :) = bfr__m_./det(i, 1);
 end
 %--------------------------------------------------------------------------
 %{
@@ -133,6 +133,8 @@ ffll_mt  = ffll_m.';
 fflr_mt  = fflr_m.';
 ffrl_mt  = ffrl_m.';
 ffrr_mt  = ffrr_m.';
+bfr__m_  = bfr/mass;
+bfl__m_  = bfl/mass;
 bfLll_it = zeros(N, R, Km1);
 bfLlr_it = zeros(N, R, Km1);
 bfLrl_it = zeros(N, R, Km1);
@@ -143,8 +145,10 @@ for i = 1:Km1
     bfLrl_it(:, :, i) =-1./2.*ffrl_mt*bf_./det(i+1, 1);
     bfLrr_it(:, :, i) = 1./2.*ffrr_mt*bf_./det(i+1, 1);
 end
-bfLrrb1t = ffrr_mt*bf_./det(1, 1);
+bfLrrb1t =-ffrr_mt*bf_./det(1, 1);
 bfLllb2t = ffll_mt*bf_./det(K, 1);
+bfLrlb1t =-bfr__m_*bf_./det(1, 1);
+bfLlrb2t = bfl__m_*bf_./det(K, 1);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % ASSIGN TO (CELL)...
 %--------------------------------------------------------------------------
@@ -196,7 +200,7 @@ intg.bflLlr_b = bflLlr_b;
 intg.bfrLrl_b = bfrLrl_b;
 intg.bfrLrr_b = bfrLrr_b;
 %--------------------------------------------------------------------------
-%{
+%
 Lll_it        = zeros(N, N, Km1);
 Llr_it        = zeros(N, N, Km1);
 Lrl_it        = zeros(N, N, Km1);
@@ -245,7 +249,9 @@ intg.bfLll_it = bfLll_it;
 intg.bfLlr_it = bfLlr_it;
 intg.bfLrl_it = bfLrl_it;
 intg.bfLrr_it = bfLrr_it;
-intg.bfLrrb1t = bfLrrb1t;
-intg.bfLllb2t = bfLllb2t;
+intg.bfLrrb1t = bfLrrb1t; % rr
+intg.bfLrlb1t = bfLrlb1t; % rl
+intg.bfLllb2t = bfLllb2t; % ll
+intg.bfLlrb2t = bfLlrb2t; % lr
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 end

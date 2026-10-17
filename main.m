@@ -65,15 +65,18 @@ while delta > tol
     C_dof  = nu+U_dof;
     clb1   = nu+ulb1;
     crb2   = nu+urb2;
-    g      = Res(basis, mesh, intg, flag, c, C_dof, U_dof, clb1, crb2, ulb1, urb2, dlb1, drb2, uh, d1uh, cd2uh);
-    d1Ul   = g.d1Ul;
-    d1Ux   = g.d1Ux;
-    J_mat  = Jac(basis, mesh, intg, flag, c, C_dof, U_dof, ulb1, urb2, d1Ul, d1Ux); % this "d1U" already contains the lifting contribution!
+    g1     = Res(basis, mesh, intg, flag, c, C_dof, U_dof, clb1, crb2, ulb1, urb2, dlb1, drb2, uh, d1uh, cd2uh);
+    d1Ul   = g1.d1Ul;
+    d1Ux   = g1.d1Ux;
+    g2     = Jac(basis, mesh, intg, flag, c, C_dof, U_dof, ulb1, urb2, d1Ul, d1Ux); % this "d1UL" already contains the lifting contribution!
     %----------------------------------------------------------------------
-    R_dof  = g.R_dof;
-    R_doft = R_dof.';
-    R1doft = R_doft(:);
-    X1doft = J_mat\R1doft;
+    R1dof  = g1.R_dof;
+    R2dof  = g2.R_dof;
+    J_mat  = g2.MAT;
+    B_dof  = R1dof+R2dof;
+    B_doft = B_dof.';
+    B1doft = B_doft(:);
+    X1doft = J_mat\B1doft;
     X1dof  = reshape(X1doft, [], K).'; % \delta u
     U_dof  = U_dof-X1dof;
 

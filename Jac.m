@@ -1,9 +1,9 @@
-function [MAT] = Jac(basis, mesh, intg, flag, c, C_dof, U_dof, ulb1, urb2, d1Ul, d1Ux) %#ok<INUSD> 
+function [g] = Jac(basis, mesh, intg, flag, c, C_dof, U_dof, ulb1, urb2, d1Ul, d1Ux) %#ok<INUSD> 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % CELL:
 %--------------------------------------------------------------------------
 N            = basis.N;
-NN           = N*N;
+K            = mesh.K;
 det          = mesh.det;
 TNN          = mesh.TNN;
 IJd_         = mesh.IJd_;
@@ -14,7 +14,9 @@ bf_          = intg.bf_;
 DDr          = intg.DDr;
 DFr          = intg.DFr;
 FDr          = intg.FDr;
+NN           = N*N;
 val          = zeros(TNN, 1);
+rhs          = zeros(K, N);
 %--------------------------------------------------------------------------
 d1Uc         = U_dof*bd_./det;
 C            = C_dof*bf_;
@@ -79,8 +81,10 @@ if flag
     val(IJdr)   = val(IJdr)-VALdir_NN_1;
     val(IJb1)   = val(IJb1)-VALdb1_NN_1;
     val(IJb2)   = val(IJb2)-VALdb2_NN_1;
+    rhs(1, :)   = (bfLrlb1t.*ulb1)*(-2.*c.*d1Ult(:, 1).*Wbf.*det(1, 1));
+    rhs(K, :)   = (bfLlrb2t.*urb2)*(-2.*c.*d1Ult(:, K).*Wbf.*det(K, 1));
     %----------------------------------------------------------------------
-    %
+    %{
     aux         = zeros(TNN);
     aux(IJdl)   = aux(IJdl)-VALdil_NN_1;
     aux(IJol)   =-VALoil_NN_1;
@@ -89,22 +93,20 @@ if flag
     aux(IJb1)   = aux(IJb1)-VALdb1_NN_1;
     aux(IJb2)   = aux(IJb2)-VALdb2_NN_1;
     AUX         = Mat(aux);
-    RHSL        = zeros(K, N);
-    RHSL(1, :)  = (bfLrlb1t.*ulb1)*(-2.*c.*d1Ult(:, 1).*Wbf.*det(1, 1));
-    RHSL(K, :)  = (bfLlrb2t.*urb2)*(-2.*c.*d1Ult(:, K).*Wbf.*det(K, 1));
     B_doft      = U_dof.';
     B1doft      = B_doft(:);
     X1doft      = AUX*B1doft;
-    X1dofI      = reshape(X1doft, [], K).'+RHSL;
+    X1dofI      = reshape(X1doft, [], K).'-rhs;
     X1dofE      =-2.*c.*d1Ul.*d1Ux*Wbf.*det;
     diffl1      = X1dofI-X1dofE; max(abs(diffl1), [], 'all')
     %}
     %----------------------------------------------------------------------
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% ASSEMBLE JACOBIAN:
+% ASSEMBLE JACOBIAN AND ASSIGN TO...
 %--------------------------------------------------------------------------
-MAT = Mat(val);
+g.MAT   = Mat(val);
+g.R_dof = rhs;
 
 
 % dia = load("mat_d.mat"); matd = dia.Jd;

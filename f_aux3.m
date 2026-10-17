@@ -145,10 +145,10 @@ for i = 1:Km1
     bfLrl_it(:, :, i) = 1./2.*ffrl_mt*bf_./det(i+1, 1); % + = -- <-o
     bfLrr_it(:, :, i) =-1./2.*ffrr_mt*bf_./det(i+1, 1); % -      <-o
 end
-bfLrrb1t =-ffrr_mt*bf_./det(1, 1);
-bfLrlb1t =-bfrb1_M*bf_;
-bfLllb2t = ffll_mt*bf_./det(K, 1);
-bfLlrb2t = bflb2_M*bf_;
+bfLllb2t = ffll_mt*bf_./det(K, 1); % +      o->
+bfLlrb2t =-bflb2_M*bf_;            % -      o->
+bfLrlb1t = bfrb1_M*bf_;            % + = -- <-o
+bfLrrb1t =-ffrr_mt*bf_./det(1, 1); % -      <-o
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % ASSIGN TO (CELL)...
 %--------------------------------------------------------------------------
@@ -200,7 +200,7 @@ intg.bflLlr_b = bflLlr_b;
 intg.bfrLrl_b = bfrLrl_b;
 intg.bfrLrr_b = bfrLrr_b;
 %--------------------------------------------------------------------------
-%
+%{
 Lll_it        = zeros(N, N, Km1);
 Llr_it        = zeros(N, N, Km1);
 Lrl_it        = zeros(N, N, Km1);

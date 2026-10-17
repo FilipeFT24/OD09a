@@ -78,14 +78,14 @@ arb2     = (bfrLrl_b*U_dof(K, :).'+0)./2;
 %--------------------------------------------------------------------------
 if flag
     %----------------------------------------------------------------------
-    ujil               = ul_i-ur_i; % o->
-    ujir               =-ujil;      % <-o
-    ujb1               = urb1-ulb1; % <-o
-    ujb2               = ulb2-urb2; % o->
-    rhsiL              = 1./2.*bfl_i_M.*ujil;
-    rhsiR              =-1./2.*bfr_i_M.*ujir;
-    rhsb1              =-bfrb1_M.*ujb1; % {v} = v, not v/2!
-    rhsb2              = bflb2_M.*ujb2; % =
+    ujil               = ul_i-ur_i;
+    ujir               =-ujil;
+    ujb1               = urb1-ulb1;
+    ujb2               = ulb2-urb2;
+    rhsiL              = 1./2.*bfl_i_M.*ujil; % o->
+    rhsiR              =-1./2.*bfr_i_M.*ujir; % <-o
+    rhsb1              =-bfrb1_M.*ujb1; % <-o
+    rhsb2              = bflb2_M.*ujb2; % o->
     d1U_dofx(1:Km1, :) = d1U_dofx(1:Km1, :)-rhsiL;
     d1U_dofx(2:K  , :) = d1U_dofx(2:K  , :)-rhsiR;
     d1U_dofx(    1, :) = d1U_dofx(    1, :)-rhsb1;
@@ -103,9 +103,13 @@ if flag
     detl_i             = det  (1:Km1, 1);
     detr_i             = det  (2:K  , 1);
     rhsiLI             = 1./2.*(U_dofl_i*ffll_mt-U_dofr_i*fflr_mt)./detl_i;
-    rhsiRI             = 1./2.*(U_dofr_i*ffrr_mt-U_dofl_i*ffrl_mt)./detr_i;
-    rhsb1I             = U_dof(1, :)*ffrr_mt./det(1, 1)+bfrb1_M.*ulb1;
+    rhsiRI             =-1./2.*(U_dofr_i*ffrr_mt-U_dofl_i*ffrl_mt)./detr_i;
+    rhsb1I             =-U_dof(1, :)*ffrr_mt./det(1, 1)+bfrb1_M.*ulb1;
     rhsb2I             = U_dof(K, :)*ffll_mt./det(K, 1)-bflb2_M.*urb2;
+    diffl1             = rhsiL-rhsiLI; max(abs(diffl1), [], 'all')
+    diffr1             = rhsiR-rhsiRI; max(abs(diffr1), [], 'all')
+    diffl2             = rhsb1-rhsb1I; max(abs(diffl2), [], 'all')
+    diffr2             = rhsb2-rhsb2I; max(abs(diffr2), [], 'all')
     %
     lift1              = zeros(K, N);
     lift1(1:Km1, :)    = lift1(1:Km1, :)-rhsiLI;
@@ -118,13 +122,8 @@ if flag
     RHSL(K, :)         = bflb2_M.*urb2;
     U_doft             = U_dof.';
     U                  = U_doft(:);
-    lift1I_1           =-MATL*U;
-    lift1I             = reshape(lift1I_1, [], K).';
-    lift1I             = lift1I+RHSL;
-    diffl1             = rhsiL-rhsiLI; max(abs(diffl1), [], 'all')
-    diffr1             = rhsiR-rhsiRI; max(abs(diffr1), [], 'all')
-    diffl2             = rhsb1-rhsb1I; max(abs(diffl2), [], 'all')
-    diffr2             = rhsb2-rhsb2I; max(abs(diffr2), [], 'all')
+    lift1I_1           = MATL*U;
+    lift1I             = reshape(lift1I_1, [], K).'+RHSL;
     diff_3             = lift1-lift1I; max(abs(diff_3), [], 'all')
     %}
     %----------------------------------------------------------------------
@@ -133,43 +132,43 @@ end
 for i = 1:K
     if i > 1
         if ~flag
-            d2U_dof1ia = zeros(1, N);
+            d2U_dof1ib = zeros(1, N);
         else
-            d2U_dof1ia = 1./2.*c_ri(i-1, 1).*bDr_M(i, :).*(ur_i(i-1, 1)-ul_i(i-1, 1));
+            d2U_dof1ib = 1./2.*bDr_M(i, :).*c_ri(i-1, 1).*(ur_i(i-1, 1)-ul_i(i-1, 1));
         end
-        d2U_dof1ib     = bfr_M(i, :).*(c_ri(i-1, 1).*dr_i(i-1, 1)+c_li(i-1, 1).*dl_i(i-1, 1))./2; % con
-        d2U_dof1ic     = bfr_M(i, :).*(c_ri(i-1, 1).*ar_i(i-1, 1)+c_li(i-1, 1).*al_i(i-1, 1));    % pen
+        d2U_dof1ia     = bfr_M(i, :).*(c_ri(i-1, 1).*dr_i(i-1, 1)+c_li(i-1, 1).*dl_i(i-1, 1))./2;
+        d2U_dof1ic     = bfr_M(i, :).*(c_ri(i-1, 1).*ar_i(i-1, 1)+c_li(i-1, 1).*al_i(i-1, 1));
         d2U_dofC(i, :) = ...
-            d2U_dofC(i, :)-(d2U_dof1ia+d2U_dof1ib+d2U_dof1ic); % <-o
+            d2U_dofC(i, :)-(d2U_dof1ia+d2U_dof1ib+d2U_dof1ic); % <-o (con+sym+pen)
     end
     if i < K
         if ~flag
-            d2U_dof2ia = zeros(1, N);
+            d2U_dof2ib = zeros(1, N);
         else
-            d2U_dof2ia = 1./2.*c_li(i, 1).*bDl_M(i, :).*(ul_i(i, 1)-ur_i(i, 1));
+            d2U_dof2ib = 1./2.*bDl_M(i, :).*c_li(i, 1).*(ul_i(i, 1)-ur_i(i, 1));
         end
-        d2U_dof2ib     = bfl_M(i, :).*(c_li(i, 1).*dl_i(i, 1)+c_ri(i, 1).*dr_i(i, 1))./2; % con
-        d2U_dof2ic     = bfl_M(i, :).*(c_li(i, 1).*al_i(i, 1)+c_ri(i, 1).*ar_i(i, 1));    % pen
+        d2U_dof2ia     = bfl_M(i, :).*(c_li(i, 1).*dl_i(i, 1)+c_ri(i, 1).*dr_i(i, 1))./2;
+        d2U_dof2ic     = bfl_M(i, :).*(c_li(i, 1).*al_i(i, 1)+c_ri(i, 1).*ar_i(i, 1));
         d2U_dofC(i, :) = ...
-            d2U_dofC(i, :)+(d2U_dof2ia+d2U_dof2ib+d2U_dof2ic); % o->
+            d2U_dofC(i, :)+(d2U_dof2ia+d2U_dof2ib+d2U_dof2ic); % o-> (con+sym+pen)
     end
 end
 %--------------------------------------------------------------------------
 if ~flag
-    d2U_dofb1a = zeros(1, N);
-    d2U_dofb2a = zeros(1, N);
+    d2U_dofb1b = zeros(1, N);
+    d2U_dofb2b = zeros(1, N);
 else
-    d2U_dofb1a = crb1.*bDrb1_M.*(urb1-ulb1); % lift: {v} = v, not v/2!
-    d2U_dofb2a = clb2.*bDlb2_M.*(ulb2-urb2); % =
+    d2U_dofb1b = bDrb1_M.*crb1.*(urb1-ulb1);
+    d2U_dofb2b = bDlb2_M.*clb2.*(ulb2-urb2);
 end
-d2U_dofb1b     = bfrb1_M.*(crb1.*drb1+clb1.*dlb1)./2;   % con
-d2U_dofb2b     = bflb2_M.*(clb2.*dlb2+crb2.*drb2)./2;   % =
-d2U_dofb1c     = bfrb1_M.*(crb1.*arb1+clb1.*alb1).*eta; % pen
-d2U_dofb2c     = bflb2_M.*(clb2.*alb2+crb2.*arb2).*eta; % =
+d2U_dofb1a     = bfrb1_M.*(crb1.*drb1+clb1.*dlb1)./2;
+d2U_dofb2a     = bflb2_M.*(clb2.*dlb2+crb2.*drb2)./2;
+d2U_dofb1c     = bfrb1_M.*(crb1.*arb1+clb1.*alb1).*eta;
+d2U_dofb2c     = bflb2_M.*(clb2.*alb2+crb2.*arb2).*eta;
 d2U_dofC(1, :) = ...
-    d2U_dofC(1, :)-(d2U_dofb1a+d2U_dofb1b+d2U_dofb1c);
+    d2U_dofC(1, :)-(d2U_dofb1a+d2U_dofb1b+d2U_dofb1c); % <-o (con+sym+pen)
 d2U_dofC(K, :) = ...
-    d2U_dofC(K, :)+(d2U_dofb2a+d2U_dofb2b+d2U_dofb2c);
+    d2U_dofC(K, :)+(d2U_dofb2a+d2U_dofb2b+d2U_dofb2c); % o-> (con+sym+pen)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % COMPUTE RESIDUAL AND ASSIGN TO...
 %--------------------------------------------------------------------------

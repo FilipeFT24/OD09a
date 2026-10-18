@@ -62,23 +62,22 @@ U_dof = rand(size(U_dof));
 
 while delta > tol
     %----------------------------------------------------------------------
-    C_dof  = nu+U_dof;
-    clb1   = nu+ulb1;
-    crb2   = nu+urb2;
-    g1     = Res(basis, mesh, intg, flag, c, C_dof, U_dof, clb1, crb2, ulb1, urb2, dlb1, drb2, uh, d1uh, cd2uh);
-    d1Ul   = g1.d1Ul;
-    d1Ux   = g1.d1Ux;
-    g2     = Jac(basis, mesh, intg, flag, c, C_dof, U_dof, ulb1, urb2, d1Ul, d1Ux); % this "d1UL" already contains the lifting contribution!
+    C_dof    = nu+U_dof;
+    g1       = Res(basis, mesh, intg, flag, nu, c, U_dof, ulb1, urb2, dlb1, drb2, uh, d1uh, cd2uh);
+    d1Ul     = g1.d1Ul;
+    d1Ux     = g1.d1Ux;
+    d2U_dofx = g1.d2U_dofx;
+    g2       = Jac(basis, mesh, intg, flag, nu, c, U_dof, ulb1, urb2, dlb1, drb2, d1Ul, d1Ux, d2U_dofx); % this "d1UL" already contains the lifting contribution!
     %----------------------------------------------------------------------
-    R1dof  = g1.R_dof;
-    R2dof  = g2.R_dof;
-    J_mat  = g2.MAT;
-    B_dof  = R1dof+R2dof;
-    B_doft = B_dof.';
-    B1doft = B_doft(:);
-    X1doft = J_mat\B1doft;
-    X1dof  = reshape(X1doft, [], K).'; % \delta u
-    U_dof  = U_dof-X1dof;
+    R1dof    = g1.R_dof;
+    R2dof    = g2.R_dof;
+    J_mat    = g2.MAT;
+    B_dof    = R1dof+R2dof;
+    B_doft   = B_dof.';
+    B1doft   = B_doft(:);
+    X1doft   = J_mat\B1doft;
+    X1dof    = reshape(X1doft, [], K).'; % \delta u
+    U_dof    = U_dof-X1dof;
 
     figure;
     hold on;

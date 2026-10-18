@@ -1,4 +1,4 @@
-function [g] = Res(basis, mesh, intg, flag, c, C_dof, U_dof, clb1, crb2, ulb1, urb2, dlb1, drb2, uh, d1uh, cd2uh) %#ok<INUSD> 
+function [g] = Res(basis, mesh, intg, flag, nu, c, U_dof, ulb1, urb2, dlb1, drb2, uh, d1uh, cd2uh) %#ok<INUSD> 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % CELL:
 %--------------------------------------------------------------------------
@@ -12,11 +12,12 @@ Wbd_m    = intg.Wbd_m;
 dc_m     = intg.dc_m;
 d1U_dofx = zeros(K, N); % aux. variable (using for debugging later on)
 %--------------------------------------------------------------------------
-C        = C_dof*bf_;
 d1U      = U_dof*bd_;
-Cd1U     = C.*d1U;
+U        = U_dof*bf_;
+nupU     = nu+U;
+nupUd1U  = nupU.*d1U;
 d1U_dofl = U_dof*dc_m./det;
-d2U_dofC =-Cd1U*Wbd_m./det.^2;
+d2U_dofC =-nupUd1U*Wbd_m./det.^2;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % FACE:
 %--------------------------------------------------------------------------
@@ -45,14 +46,16 @@ bflb2_M  = bfl_M(K, :);
 bfl_i_M  = bfl_M(1:Km1, :);
 bfr_i_M  = bfr_M(2:K  , :);
 %--------------------------------------------------------------------------
-c_li     = C_dof(1:Km1, :)*bfl_;
-c_ri     = C_dof(2:K  , :)*bfr_;
-crb1     = C_dof(    1, :)*bfr_;
-clb2     = C_dof(    K, :)*bfl_;
 ul_i     = U_dof(1:Km1, :)*bfl_;
 ur_i     = U_dof(2:K  , :)*bfr_;
 urb1     = U_dof(    1, :)*bfr_;
 ulb2     = U_dof(    K, :)*bfl_;
+nupul_i  = nu+ul_i;
+nupur_i  = nu+ur_i;
+nupurb1  = nu+urb1;
+nupulb2  = nu+ulb2;
+nupulb1  = nu+ulb1;
+nupurb2  = nu+urb2;
 dl_i     = zeros(Km1, 1);
 dr_i     = zeros(Km1, 1);
 plli     = zeros(Km1, 1);
@@ -134,10 +137,10 @@ for i = 1:K
         if ~flag
             d2U_dof1ib = zeros(1, N);
         else
-            d2U_dof1ib = 1./2.*bDr_M(i, :).*c_ri(i-1, 1).*(ur_i(i-1, 1)-ul_i(i-1, 1));
+            d2U_dof1ib = 1./2.*bDr_M(i, :).*nupur_i(i-1, 1).*(ur_i(i-1, 1)-ul_i(i-1, 1));
         end
-        d2U_dof1ia     = bfr_M(i, :).*(c_ri(i-1, 1).*dr_i(i-1, 1)+c_li(i-1, 1).*dl_i(i-1, 1))./2;
-        d2U_dof1ic     = bfr_M(i, :).*(c_ri(i-1, 1).*ar_i(i-1, 1)+c_li(i-1, 1).*al_i(i-1, 1));
+        d2U_dof1ia     = bfr_M(i, :).*(nupur_i(i-1, 1).*dr_i(i-1, 1)+nupul_i(i-1, 1).*dl_i(i-1, 1))./2;
+        d2U_dof1ic     = bfr_M(i, :).*(nupur_i(i-1, 1).*ar_i(i-1, 1)+nupul_i(i-1, 1).*al_i(i-1, 1));
         d2U_dofC(i, :) = ...
             d2U_dofC(i, :)-(d2U_dof1ia+d2U_dof1ib+d2U_dof1ic); % <-o (con+sym+pen)
     end
@@ -145,10 +148,10 @@ for i = 1:K
         if ~flag
             d2U_dof2ib = zeros(1, N);
         else
-            d2U_dof2ib = 1./2.*bDl_M(i, :).*c_li(i, 1).*(ul_i(i, 1)-ur_i(i, 1));
+            d2U_dof2ib = 1./2.*bDl_M(i, :).*nupul_i(i, 1).*(ul_i(i, 1)-ur_i(i, 1));
         end
-        d2U_dof2ia     = bfl_M(i, :).*(c_li(i, 1).*dl_i(i, 1)+c_ri(i, 1).*dr_i(i, 1))./2;
-        d2U_dof2ic     = bfl_M(i, :).*(c_li(i, 1).*al_i(i, 1)+c_ri(i, 1).*ar_i(i, 1));
+        d2U_dof2ia     = bfl_M(i, :).*(nupul_i(i, 1).*dl_i(i, 1)+nupur_i(i, 1).*dr_i(i, 1))./2;
+        d2U_dof2ic     = bfl_M(i, :).*(nupul_i(i, 1).*al_i(i, 1)+nupur_i(i, 1).*ar_i(i, 1));
         d2U_dofC(i, :) = ...
             d2U_dofC(i, :)+(d2U_dof2ia+d2U_dof2ib+d2U_dof2ic); % o-> (con+sym+pen)
     end
@@ -158,13 +161,13 @@ if ~flag
     d2U_dofb1b = zeros(1, N);
     d2U_dofb2b = zeros(1, N);
 else
-    d2U_dofb1b = bDrb1_M.*crb1.*(urb1-ulb1);
-    d2U_dofb2b = bDlb2_M.*clb2.*(ulb2-urb2);
+    d2U_dofb1b = bDrb1_M.*nupurb1.*(urb1-ulb1);
+    d2U_dofb2b = bDlb2_M.*nupulb2.*(ulb2-urb2);
 end
-d2U_dofb1a     = bfrb1_M.*(crb1.*drb1+clb1.*dlb1)./2;
-d2U_dofb2a     = bflb2_M.*(clb2.*dlb2+crb2.*drb2)./2;
-d2U_dofb1c     = bfrb1_M.*(crb1.*arb1+clb1.*alb1).*eta;
-d2U_dofb2c     = bflb2_M.*(clb2.*alb2+crb2.*arb2).*eta;
+d2U_dofb1a     = bfrb1_M.*(nupurb1.*drb1+nupulb1.*dlb1)./2;
+d2U_dofb2a     = bflb2_M.*(nupulb2.*dlb2+nupurb2.*drb2)./2;
+d2U_dofb1c     = bfrb1_M.*(nupurb1.*arb1+nupulb1.*alb1).*eta;
+d2U_dofb2c     = bflb2_M.*(nupulb2.*alb2+nupurb2.*arb2).*eta;
 d2U_dofC(1, :) = ...
     d2U_dofC(1, :)-(d2U_dofb1a+d2U_dofb1b+d2U_dofb1c); % <-o (con+sym+pen)
 d2U_dofC(K, :) = ...
@@ -175,15 +178,46 @@ d2U_dofC(K, :) = ...
 F_dof_  = intg.F_dof;
 F       =   F_dof_*bf_;
 d1Ul    = d1U_dofl*bf_;
-d1Ux    = d1U_dofx*bf_;
 d2UC    = d2U_dofC*bf_;
 d1Ul2   = d1Ul.^2;
 R       = d2UC-c.*d1Ul2-F;
 R_dof   = R*Wbf.*det;
 %--------------------------------------------------------------------------
 g.d1Ul  = d1Ul;  % aux. variable
-g.d1Ux  = d1Ux;  % aux. variable (using for debugging later on)
 g.R_dof = R_dof; % residual
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% DEBUG JAC.:
+%--------------------------------------------------------------------------
+d2U_dofx = zeros(K, N);
+for i = 1:K
+    if i > 1
+        if ~flag
+            d2U_dof1ib = zeros(1, N);
+        else
+            d2U_dof1ib = 1./2.*bDr_M(i, :).*nupur_i(i-1, 1).*(ur_i(i-1, 1)-ul_i(i-1, 1));
+        end
+        d2U_dof1ia     = bfr_M(i, :).*(nupur_i(i-1, 1).*dr_i(i-1, 1)+nupul_i(i-1, 1).*dl_i(i-1, 1))./2;
+        d2U_dofx(i, :) = ...
+            d2U_dofx(i, :)-(d2U_dof1ia+d2U_dof1ib);
+    end
+    if i < K
+        if ~flag
+            d2U_dof2ib = zeros(1, N);
+        else
+            d2U_dof2ib = 1./2.*bDl_M(i, :).*nupul_i(i, 1).*(ul_i(i, 1)-ur_i(i, 1));
+        end
+        d2U_dof2ia     = bfl_M(i, :).*(nupul_i(i, 1).*dl_i(i, 1)+nupur_i(i, 1).*dr_i(i, 1))./2;
+        d2U_dofx(i, :) = ...
+            d2U_dofx(i, :)+(d2U_dof2ia+d2U_dof2ib);
+    end
+end
+d2U_dofx(1, :) = ...
+    d2U_dofx(1, :)-(d2U_dofb1a+d2U_dofb1b);
+d2U_dofx(K, :) = ...
+    d2U_dofx(K, :)+(d2U_dofb2a+d2U_dofb2b);
+%--------------------------------------------------------------------------
+g.d1Ux     = d1U_dofx*bf_; % aux. variable (using for debugging later on)
+g.d2U_dofx = d2U_dofx;     % =
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % CHECK:
 %--------------------------------------------------------------------------

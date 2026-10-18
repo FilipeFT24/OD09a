@@ -133,12 +133,21 @@ ffll_mt  = ffll_m.';
 fflr_mt  = fflr_m.';
 ffrl_mt  = ffrl_m.';
 ffrr_mt  = ffrr_m.';
+bfrb1_M  = bfr_M(1, :);
+bflb2_M  = bfl_M(K, :);
+bfLll_it = 1./2.*ffll_mt*bf_; % +      o->
+bfLlr_it =-1./2.*fflr_mt*bf_; % -      o->
+bfLrl_it = 1./2.*ffrl_mt*bf_; % + = -- <-o
+bfLrr_it =-1./2.*ffrr_mt*bf_; % -      <-o
+bfLllb2t =       ffll_mt*bf_; % +      o->
+bfLlrb2t =      -bflb2_M*bf_; % -      o->
+bfLrlb1t =       bfrb1_M*bf_; % + = -- <-o
+bfLrrb1t =      -ffrr_mt*bf_; % -      <-o
+%{
 bfLll_it = zeros(N, R, Km1);
 bfLlr_it = zeros(N, R, Km1);
 bfLrl_it = zeros(N, R, Km1);
 bfLrr_it = zeros(N, R, Km1);
-bfrb1_M  = bfr_M(1, :);
-bflb2_M  = bfl_M(K, :);
 for i = 1:Km1
     bfLll_it(:, :, i) = 1./2.*ffll_mt*bf_./det(i  , 1); % +      o->
     bfLlr_it(:, :, i) =-1./2.*fflr_mt*bf_./det(i  , 1); % -      o->
@@ -149,6 +158,7 @@ bfLllb2t = ffll_mt*bf_./det(K, 1); % +      o->
 bfLlrb2t =-bflb2_M*bf_;            % -      o->
 bfLrlb1t = bfrb1_M*bf_;            % + = -- <-o
 bfLrrb1t =-ffrr_mt*bf_./det(1, 1); % -      <-o
+%}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % ASSIGN TO (CELL)...
 %--------------------------------------------------------------------------
@@ -177,6 +187,8 @@ intg.F_dof    = inittype(1, Fh, xdc, xqc, Wbf_m);
 %--------------------------------------------------------------------------
 bDl           = bdl./det;
 bDr           = bdr./det;
+bDl_          = bDl.';
+bDr_          = bDr.';
 bfl_          = bfl.';
 bfr_          = bfr.';
 eta           = 2;
@@ -184,6 +196,8 @@ intg.bDl      = bDl;
 intg.bDr      = bDr;
 intg.bfl      = bfl;
 intg.bfr      = bfr;
+intg.bDl_     = bDl_;
+intg.bDr_     = bDr_;
 intg.bfl_     = bfl_;
 intg.bfr_     = bfr_;
 intg.bDl_M    = bDl_M;

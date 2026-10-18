@@ -194,9 +194,9 @@ for i = 1:K
         if ~flag
             d2U_dof1ib = zeros(1, N);
         else
-            d2U_dof1ib = 1./2.*bDr_M(i, :).*nupur_i(i-1, 1).*(ur_i(i-1, 1)-ul_i(i-1, 1));
+            d2U_dof1ib = 1./2.*bDr_M(i, :).*(ur_i(i-1, 1)-ul_i(i-1, 1)).*(nupur_i(i-1, 1)+ur_i(i-1, 1));
         end
-        d2U_dof1ia     = bfr_M(i, :).*(nupur_i(i-1, 1).*dr_i(i-1, 1)+nupul_i(i-1, 1).*dl_i(i-1, 1))./2;
+        d2U_dof1ia     = bfr_M(i, :).*((dr_i(i-1, 1).*ur_i(i-1, 1)+dl_i(i-1, 1).*ul_i(i-1, 1))+(nupur_i(i-1, 1).*dr_i(i-1, 1)+nupul_i(i-1, 1).*dl_i(i-1, 1)))./2;
         d2U_dofx(i, :) = ...
             d2U_dofx(i, :)-(d2U_dof1ia+d2U_dof1ib);
     end
@@ -204,20 +204,29 @@ for i = 1:K
         if ~flag
             d2U_dof2ib = zeros(1, N);
         else
-            d2U_dof2ib = 1./2.*bDl_M(i, :).*nupul_i(i, 1).*(ul_i(i, 1)-ur_i(i, 1));
+            d2U_dof2ib = 1./2.*bDl_M(i, :).*(ul_i(i, 1)-ur_i(i, 1)).*(nupul_i(i, 1)+ul_i(i, 1));
         end
-        d2U_dof2ia     = bfl_M(i, :).*(nupul_i(i, 1).*dl_i(i, 1)+nupur_i(i, 1).*dr_i(i, 1))./2;
+        d2U_dof2ia     = bfl_M(i, :).*((dl_i(i, 1).*ul_i(i, 1)+dr_i(i, 1).*ur_i(i, 1))+(nupul_i(i, 1).*dl_i(i, 1)+nupur_i(i, 1).*dr_i(i, 1)))./2;
         d2U_dofx(i, :) = ...
             d2U_dofx(i, :)+(d2U_dof2ia+d2U_dof2ib);
     end
 end
+if ~flag
+    d2U_dofb1b = zeros(1, N);
+    d2U_dofb2b = zeros(1, N);
+else
+    d2U_dofb1b = bDrb1_M.*(urb1-ulb1).*(nupurb1+urb1);
+    d2U_dofb2b = bDlb2_M.*(ulb2-urb2).*(nupulb2+ulb2);
+end
+d2U_dofb1a     = bfrb1_M.*((drb1.*urb1+dlb1.*ulb1)+(nupurb1.*drb1+nupulb1.*dlb1))./2;
+d2U_dofb2a     = bflb2_M.*((dlb2.*ulb2+drb2.*urb2)+(nupulb2.*dlb2+nupurb2.*drb2))./2;
 d2U_dofx(1, :) = ...
     d2U_dofx(1, :)-(d2U_dofb1a+d2U_dofb1b);
 d2U_dofx(K, :) = ...
     d2U_dofx(K, :)+(d2U_dofb2a+d2U_dofb2b);
 %--------------------------------------------------------------------------
-g.d1Ux     = d1U_dofx*bf_; % aux. variable (using for debugging later on)
-g.d2U_dofx = d2U_dofx;     % =
+g.d1Ux         = d1U_dofx*bf_; % aux. variable (using for debugging later on)
+g.d2U_dofx     = d2U_dofx;     % =
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % CHECK:
 %--------------------------------------------------------------------------

@@ -150,35 +150,22 @@ J2bLrrb1t = zeros(N, N);
 J2bLllb2t = zeros(N, N);
 if flag
     for i = 1:Km1
-        %{
         J2bLll_it(:, :, i) = bfl_*(1./2.*bDl(i  , :).*(nupul_i(i, 1)+(ul_i(i, 1)-ur_i(i, 1)))); % (transpose)
         J2bLlr_it(:, :, i) =-bfr_*(1./2.*bDl(i  , :).*(nupul_i(i, 1)));                         % =
         J2bLrl_it(:, :, i) = bfl_*(1./2.*bDr(i+1, :).*(nupur_i(i, 1)));                         % =
         J2bLrr_it(:, :, i) =-bfr_*(1./2.*bDr(i+1, :).*(nupur_i(i, 1)+(ur_i(i, 1)-ul_i(i, 1)))); % =
-        %}
-        J2bLll_it(:, :, i) = bfl_*(1./2.*bDl(i  , :).*(nupul_i(i, 1))); % (transpose)
-        J2bLlr_it(:, :, i) =-bfr_*(1./2.*bDl(i  , :).*(nupul_i(i, 1))); % =
-        J2bLrl_it(:, :, i) = bfl_*(1./2.*bDr(i+1, :).*(nupur_i(i, 1))); % =
-        J2bLrr_it(:, :, i) =-bfr_*(1./2.*bDr(i+1, :).*(nupur_i(i, 1))); % =
     end
-    J2bLrrb1t =-bfr_*(bDr(1, :).*nupurb1); % =
-    J2bLllb2t = bfl_*(bDl(K, :).*nupulb2); % =
+    J2bLrrb1t =-bfr_*(bDr(1, :).*(nupurb1+(urb1-ulb1))); % =
+    J2bLllb2t = bfl_*(bDl(K, :).*(nupulb2+(ulb2-urb2))); % =
 end
 for i = 1:Km1
-    %{
     J2aLll_it(:, :, i) = (dl_i(i, 1).*bfl_+nupul_i(i, 1).*bDl_(:, i  ))./2*bfl; % (transpose)
     J2aLlr_it(:, :, i) = (dr_i(i, 1).*bfr_+nupur_i(i, 1).*bDr_(:, i+1))./2*bfl; % =
     J2aLrl_it(:, :, i) =-(dl_i(i, 1).*bfl_+nupul_i(i, 1).*bDl_(:, i  ))./2*bfr; % =
     J2aLrr_it(:, :, i) =-(dr_i(i, 1).*bfr_+nupur_i(i, 1).*bDr_(:, i+1))./2*bfr; % =
-    %}
-    J2aLll_it(:, :, i) = (nupul_i(i, 1).*bDl_(:, i  ))./2*bfl; % (transpose) DEBUG
-    J2aLlr_it(:, :, i) = (nupur_i(i, 1).*bDr_(:, i+1))./2*bfl; % =
-    J2aLrl_it(:, :, i) =-(nupul_i(i, 1).*bDl_(:, i  ))./2*bfr; % =
-    J2aLrr_it(:, :, i) =-(nupur_i(i, 1).*bDr_(:, i+1))./2*bfr; % =
-    %}
 end
-J2aLrrb1t    =-(nupurb1.*bDr_(:, 1))./2*bfr; % =
-J2aLllb2t    = (nupulb2.*bDl_(:, K))./2*bfl; % =
+J2aLrrb1t    =-(drb1.*bfr_+nupurb1.*bDr_(:, 1))./2*bfr; % =
+J2aLllb2t    = (dlb2.*bfl_+nupulb2.*bDl_(:, K))./2*bfl; % =
 J2Lll_it     = J2aLll_it+J2bLll_it+J2cLll_it;
 J2Llr_it     = J2aLlr_it+J2bLlr_it+J2cLlr_it;
 J2Lrl_it     = J2aLrl_it+J2bLrl_it+J2cLrl_it;
@@ -201,8 +188,8 @@ val(IJor)    = val(IJor)-VAL2oir_NN_1;
 val(IJdr)    = val(IJdr)-VAL2dir_NN_1;
 val(IJb1)    = val(IJb1)-VAL2db1_NN_1;
 val(IJb2)    = val(IJb2)-VAL2db2_NN_1;
-rhs(1, :)    = rhs(1, :)-(bfr.*(nupulb1.*dlb1)./2-bDr(1, :).*nupurb1.*ulb1); % <-o
-rhs(K, :)    = rhs(K, :)+(bfl.*(nupurb2.*drb2)./2-bDl(K, :).*nupulb2.*urb2); % o->
+rhs(1, :)    = rhs(1, :)-(bfr.*(dlb1.*ulb1+nupulb1.*dlb1)./2-bDr(1, :).*nupurb1.*ulb1); % <-o
+rhs(K, :)    = rhs(K, :)+(bfl.*(drb2.*urb2+nupurb2.*drb2)./2-bDl(K, :).*nupulb2.*urb2); % o->
 %
 aux          = zeros(TNN);
 aux(IJdl)    = aux(IJdl)+VAL2dil_NN_1;

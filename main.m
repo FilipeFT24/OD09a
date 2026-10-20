@@ -20,13 +20,13 @@ end
 %--------------------------------------------------------------------------
 flag  = 1; % 0: w/o lifting, 1: w/ lifting
 p     = 2;
-h     = 0.05;
-Xvt   = 0:h:1;
+h     = 0.01;
+Xvt   = -0.25:h:1.25;
 
-Xvt(1, 2) = 0.01;
-Xvt(1, 3) = 0.072;
-Xvt(1, 4) = 0.123;
-Xvt(1, 7) = 0.265;
+% Xvt(1, 2) = 0.01;
+% Xvt(1, 3) = 0.072;
+% Xvt(1, 4) = 0.123;
+% Xvt(1, 7) = 0.265;
 
 nu    = 1;
 c     = 0.5;
@@ -48,16 +48,21 @@ tol   = 1e-12;
 %--------------------------------------------------------------------------
 K     = mesh.K;
 Ke    = K+1;
+Xl    = Xvt(1,   1);
+Xr    = Xvt(1, end);
+
+%ulb1  =  1.5;%uh(0);
+%urb2  = 2.25;%uh(1);
+ulb1  =   uh(Xl);
+urb2  =   uh(Xr);
+dlb1  = d1uh(Xl);
+drb2  = d1uh(Xr);
 U_dof = zeros(K, p+1);
-ulb1  =  1.5;%uh(0);
-urb2  = 2.25;%uh(1);
-dlb1  = d1uh(0);
-drb2  = d1uh(1);
 %--------------------------------------------------------------------------
 
-rng("default");
-U_dof = rand(size(U_dof));
-%U_dof = inittype(0, uh, mesh.xdc, intg.xqc, intg.Wbf_m);
+%rng("default");
+%U_dof = rand(size(U_dof));
+U_dof = inittype(0, uh, mesh.xdc, intg.xqc, intg.Wbf_m);
 %U_dof = zeros(K, p+1);
 
 while delta > tol

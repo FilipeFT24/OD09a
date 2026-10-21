@@ -108,8 +108,8 @@ if flag
     val(IJdr)    = val(IJdr)-VAL1dir_NN_1;
     val(IJb1)    = val(IJb1)-VAL1db1_NN_1;
     val(IJb2)    = val(IJb2)-VAL1db2_NN_1;
-    rhs(1, :)    = (bfLrlb1t.*ulb1)*(-2.*c.*d1Ult(:, 1).*Wbf.*det(1, 1));
-    rhs(K, :)    = (bfLlrb2t.*urb2)*(-2.*c.*d1Ult(:, K).*Wbf.*det(K, 1));
+    rhs(1, :)    = (bfLrlb1t.*ulb1)*(-2.*c.*d1Ult(:, 1).*Wbf);
+    rhs(K, :)    = (bfLlrb2t.*urb2)*(-2.*c.*d1Ult(:, K).*Wbf);
     %----------------------------------------------------------------------
     %{
     aux          = zeros(TNN);

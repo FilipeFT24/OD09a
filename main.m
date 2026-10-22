@@ -20,20 +20,20 @@ end
 %--------------------------------------------------------------------------
 flag  = 1; % 0: w/o lifting, 1: w/ lifting
 p     = 2;
-h     = 0.01;
-Xvt   = 0:h:1;
+h     = 0.05;
+Xvt   = -0.25:h:1.25;
 
-Xvt(1, 2) = 0.01;
-Xvt(1, 3) = 0.072;
-Xvt(1, 4) = 0.123;
-Xvt(1, 7) = 0.265;
+% Xvt(1, 2) = 0.01;
+% Xvt(1, 3) = 0.072;
+% Xvt(1, 4) = 0.123;
+% Xvt(1, 7) = 0.265;
 
 nu    = 1;
 c     = 0.5;
 arg   = @(x) pi.*x;
-uh    = @(x) sin(arg(x));
-d1uh  = @(x) pi.*cos(arg(x));
-cd2uh = @(x)-pi.^2.*(sin(arg(x)).^2+nu.*sin(arg(x))-cos(arg(x)).^2);
+Uh    = @(x) sin(arg(x));
+dUh   = @(x) pi.*cos(arg(x));
+dAdUh = @(x)-pi.^2.*(sin(arg(x)).^2+nu.*sin(arg(x))-cos(arg(x)).^2);
 fh    = @(x) pi.^2.*((nu+sin(pi.*x)).*sin(pi.*x)-(1+c).*cos(pi.*x).^2);
 %--------------------------------------------------------------------------
 basis = f_aux1(p);
@@ -50,29 +50,30 @@ K     = mesh.K;
 Ke    = K+1;
 Xl    = Xvt(1,   1);
 Xr    = Xvt(1, end);
-
-ulb1  =  1.5;%uh(0);
-urb2  = 2.25;%uh(1);
-ulb1  =   uh(Xl);
-urb2  =   uh(Xr);
-dlb1  = d1uh(Xl);
-drb2  = d1uh(Xr);
-U_dof = zeros(K, p+1);
-%--------------------------------------------------------------------------
-
+%{
 rng("default");
+N     = basis.N;
+U_dof = zeros(K, N);
 U_dof = rand(size(U_dof));
-%U_dof = inittype(0, uh, mesh.xdc, intg.xqc, intg.Wbf_m);
-%U_dof = zeros(K, p+1);
-
+ulb1  = 1.50;
+urb2  = 2.25;
+dlb1  = 2.50;
+drb2  = 4.00;
+%}
+U_dof = inittype(0, Uh, mesh.xdc, intg.xqc, intg.Wbf_m);
+ulb1  =  Uh(Xl);
+urb2  =  Uh(Xr);
+dlb1  = dUh(Xl);
+drb2  = dUh(Xr);
+%}
+%--------------------------------------------------------------------------
 while delta > tol
     %----------------------------------------------------------------------
     C_dof    = nu+U_dof;
-    g1       = Res(basis, mesh, intg, flag, nu, c, U_dof, ulb1, urb2, dlb1, drb2, uh, d1uh, cd2uh);
-    d1Ul     = g1.d1Ul;
-    d1Ux     = g1.d1Ux;
-    d2U_dofx = g1.d2U_dofx;
-    g2       = Jac(basis, mesh, intg, flag, nu, c, U_dof, ulb1, urb2, dlb1, drb2, d1Ul, d1Ux, d2U_dofx); % this "d1UL" already contains the lifting contribution!
+    g1       = Res(basis, mesh, intg, flag, nu, c, U_dof, ulb1, urb2, dlb1, drb2, dUh, dAdUh);
+    dU       = g1.dU;
+    dUf      = g1.dUf;
+    g2       = Jac(basis, mesh, intg, flag, nu, c, U_dof, ulb1, urb2, dlb1, drb2, dU, dUf); % this "d1UL" already contains the lifting contribution!
     %----------------------------------------------------------------------
     R1dof    = g1.R_dof;
     R2dof    = g2.R_dof;

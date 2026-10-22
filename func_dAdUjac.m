@@ -66,11 +66,11 @@ duuo2b2     = (dlb2.*ulb2+drb2.*urb2)./2;
 %--------------------------------------------------------------------------
 pl_i        = plli+plri;
 pr_i        = prli+prri;
-ap_o2_i     = (al_i.*pl_i+ar_i.*pr_i)./2; % ((alLll+arLrl)*ul+(alLlr+arLrr)*ur)/2 = (al*(Lll+Llr)+ar*(Lrl+Lrr))/2
 p_b1        = prb1+plb1;
 p_b2        = plb2+prb2;
-ap_b1       = arb1.*p_b1;
-ap_b2       = alb2.*p_b2;
+ap_o2_i     = (al_i.*pl_i+ar_i.*pr_i)./2; % ((alLll+arLrl)*ul+(alLlr+arLrr)*ur)/2 = (al*(Lll+Llr)+ar*(Lrl+Lrr))/2
+ap_b1       = (arb1.*p_b1);
+ap_b2       = (alb2.*p_b2);
 %--------------------------------------------------------------------------
 dAdU_doflib = zeros(Km1, N);
 dAdU_dofrib = zeros(Km1, N);

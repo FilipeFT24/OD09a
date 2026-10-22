@@ -200,12 +200,8 @@ J2Lll_it     = J2aLll_it+J2bLll_it-J2cLll_it.*eta; % pen term is [v]{ar([u])}, w
 J2Llr_it     = J2aLlr_it+J2bLlr_it-J2cLlr_it.*eta; % =
 J2Lrl_it     = J2aLrl_it+J2bLrl_it-J2cLrl_it.*eta; % =
 J2Lrr_it     = J2aLrr_it+J2bLrr_it-J2cLrr_it.*eta; % =
-J2Lrrb1t     = zeros(N, N);
-J2Lllb2t     = zeros(N, N);
-%{
-J2Lrrb1t     = J2aLrrb1t+J2bLrrb1t+J2cLrrb1t.*eta;
-J2Lllb2t     = J2aLllb2t+J2bLllb2t+J2cLllb2t.*eta;
-%}
+J2Lrrb1t     = J2aLrrb1t+J2bLrrb1t-J2cLrrb1t.*eta;
+J2Lllb2t     = J2aLllb2t+J2bLllb2t-J2cLllb2t.*eta;
 J2Lll_it     = reshape(J2Lll_it, [NN, Km1]);
 J2Llr_it     = reshape(J2Llr_it, [NN, Km1]);
 J2Lrl_it     = reshape(J2Lrl_it, [NN, Km1]);
@@ -222,8 +218,8 @@ val(IJor)    = val(IJor)-VAL2oir_NN_1;
 val(IJdr)    = val(IJdr)-VAL2dir_NN_1;
 val(IJb1)    = val(IJb1)-VAL2db1_NN_1;
 val(IJb2)    = val(IJb2)-VAL2db2_NN_1;
-rhs(1, :)    = rhs(1, :)-(bfr.*(dlb1.*ulb1+alb1.*dlb1)./2-bDr(1, :).*arb1.*ulb1+bfr.*(arb1.*plb1).*eta); % <-o
-rhs(K, :)    = rhs(K, :)+(bfl.*(drb2.*urb2+arb2.*drb2)./2-bDl(K, :).*alb2.*urb2+bfl.*(alb2.*prb2).*eta); % o->
+rhs(1, :)    = rhs(1, :)-(bfr.*(dlb1.*ulb1+alb1.*dlb1)./2-bDr(1, :).*arb1.*ulb1-bfr.*(arb1.*plb1).*eta); % <-o
+rhs(K, :)    = rhs(K, :)+(bfl.*(drb2.*urb2+arb2.*drb2)./2-bDl(K, :).*alb2.*urb2-bfl.*(alb2.*prb2).*eta); % o->
 %
 aux          = zeros(TNN);
 aux(IJdl)    = aux(IJdl)+VAL2dil_NN_1;
@@ -236,7 +232,7 @@ AUX          = Mat(aux);
 B_doft       = U_dof.';
 B1doft       = B_doft(:);
 X1doft       = AUX*B1doft;
-X1dofI       = reshape(X1doft, [], K).';%+rhs;
+X1dofI       = reshape(X1doft, [], K).'+rhs;
 X1dofE       = func_dAdUjac(basis, mesh, intg, A_dof, U_dof, flag, alb1, arb2, ulb1, urb2, dlb1, drb2);
 mass         = intg.mass;
 X1dofE       = X1dofE*mass.*det;

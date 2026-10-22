@@ -59,24 +59,25 @@ plri        = zeros(Km1, 1);
 prli        = zeros(Km1, 1);
 prri        = zeros(Km1, 1);
 for i = 1:Km1
-    plli(i, :) =-U_dof(i  , :)*bflLll_i_Mt(:, i);
-    plri(i, :) =-U_dof(i+1, :)*bflLlr_i_Mt(:, i);
-    prli(i, :) =-U_dof(i  , :)*bfrLrl_i_Mt(:, i);
-    prri(i, :) =-U_dof(i+1, :)*bfrLrr_i_Mt(:, i);
+    plli(i, :) = U_dof(i  , :)*bflLll_i_Mt(:, i);
+    plri(i, :) = U_dof(i+1, :)*bflLlr_i_Mt(:, i);
+    prli(i, :) = U_dof(i  , :)*bfrLrl_i_Mt(:, i);
+    prri(i, :) = U_dof(i+1, :)*bfrLrr_i_Mt(:, i);
 end
-prb1        =-U_dof(1    , :)*bfrLrrb1_Mt;
-plb1        =-ulb1.*bfrLrlb1_Mt;
-prb2        =-urb2.*bflLlrb2_Mt;
-plb2        =-U_dof(  K  , :)*bflLllb2_Mt;
+prb1        = U_dof(1    , :)*bfrLrrb1_Mt;
+plb1        = ulb1.*bfrLrlb1_Mt;
+prb2        = urb2.*bflLlrb2_Mt;
+plb2        = U_dof(  K  , :)*bflLllb2_Mt;
 %--------------------------------------------------------------------------
 aduo2_i     = (al_i.*dl_i+ar_i.*dr_i)./2;
+aduo2b1     = (arb1.*drb1+alb1.*dlb1)./2;
+aduo2b2     = (alb2.*dlb2+arb2.*drb2)./2;
+%--------------------------------------------------------------------------
 pl_i        = plli+plri;
 pr_i        = prli+prri;
 ap_o2_i     = (al_i.*pl_i+ar_i.*pr_i)./2; % ((alLll+arLrl)*ul+(alLlr+arLrr)*ur)/2 = (al*(Lll+Llr)+ar*(Lrl+Lrr))/2
 p_b1        = prb1+plb1;
 p_b2        = plb2+prb2;
-aduo2b1     = (arb1.*drb1+alb1.*dlb1)./2;
-aduo2b2     = (alb2.*dlb2+arb2.*drb2)./2;
 ap_b1       = arb1.*p_b1;
 ap_b2       = alb2.*p_b2;
 %--------------------------------------------------------------------------
@@ -102,10 +103,10 @@ dAdU_dofb2a = bflb2_M.*aduo2b2;
 dAdU_dofb1c = bfrb1_M.*ap_b1;
 dAdU_dofb2c = bflb2_M.*ap_b2;
 %--------------------------------------------------------------------------
-dAdU_doff(1:Km1, :) = dAdU_doff(1:Km1, :)+(dAdU_doflia+dAdU_doflib+dAdU_doflic.*eta); % o-> (con+sym+pen)
-dAdU_doff(2:K  , :) = dAdU_doff(2:K  , :)-(dAdU_dofria+dAdU_dofrib+dAdU_dofric.*eta); % <-o (con+sym+pen)
-dAdU_doff(1    , :) = dAdU_doff(1    , :)-(dAdU_dofb1a+dAdU_dofb1b+dAdU_dofb1c.*eta); % =
-dAdU_doff(  K  , :) = dAdU_doff(  K  , :)+(dAdU_dofb2a+dAdU_dofb2b+dAdU_dofb2c.*eta); % =
+dAdU_doff(1:Km1, :) = dAdU_doff(1:Km1, :)+(dAdU_doflia+dAdU_doflib-dAdU_doflic.*eta); % o-> (con+sym+pen) (pen term is [v]{ar([u])}, where r([u]) = -{v}[u]) => minus sign
+dAdU_doff(2:K  , :) = dAdU_doff(2:K  , :)-(dAdU_dofria+dAdU_dofrib-dAdU_dofric.*eta); % <-o (con+sym+pen)
+dAdU_doff(1    , :) = dAdU_doff(1    , :)-(dAdU_dofb1a+dAdU_dofb1b-dAdU_dofb1c.*eta); % =
+dAdU_doff(  K  , :) = dAdU_doff(  K  , :)+(dAdU_dofb2a+dAdU_dofb2b-dAdU_dofb2c.*eta); % =
 dAdU_doft           = dAdU_doft+dAdU_doff;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % CHECK:

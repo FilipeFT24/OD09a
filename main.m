@@ -21,7 +21,7 @@ end
 flag  = 1; % 0: w/o lifting, 1: w/ lifting
 p     = 2;
 h     = 0.05;
-Xvt   = -0.25:h:1.25;
+Xvt   = 0:h:1;
 
 % Xvt(1, 2) = 0.01;
 % Xvt(1, 3) = 0.072;
@@ -50,7 +50,7 @@ K     = mesh.K;
 Ke    = K+1;
 Xl    = Xvt(1,   1);
 Xr    = Xvt(1, end);
-%{
+%
 rng("default");
 N     = basis.N;
 U_dof = zeros(K, N);
@@ -59,7 +59,7 @@ ulb1  = 1.50;
 urb2  = 2.25;
 dlb1  = 2.50;
 drb2  = 4.00;
-%}
+%{
 U_dof = inittype(0, Uh, mesh.xdc, intg.xqc, intg.Wbf_m);
 ulb1  =  Uh(Xl);
 urb2  =  Uh(Xr);
@@ -73,7 +73,7 @@ while delta > tol
     g1       = Res(basis, mesh, intg, flag, nu, c, U_dof, ulb1, urb2, dlb1, drb2, dUh, dAdUh);
     dU       = g1.dU;
     dUf      = g1.dUf;
-    g2       = Jac(basis, mesh, intg, flag, nu, c, U_dof, ulb1, urb2, dlb1, drb2, dU, dUf); % this "d1UL" already contains the lifting contribution!
+    g2       = Jac(basis, mesh, intg, flag, nu, c, U_dof, ulb1, urb2, dlb1, drb2, dU, dUf); % this "dU" already contains the lifting contribution!
     %----------------------------------------------------------------------
     R1dof    = g1.R_dof;
     R2dof    = g2.R_dof;

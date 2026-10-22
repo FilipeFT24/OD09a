@@ -154,24 +154,6 @@ bfLlrb2t  =      -bfl_m*bf_;  % -      o->
 bfLrlb1t  =       bfr_m*bf_;  % + = -- <-o
 bfLrrb1t  =      -bfffrr_m.'; % -      <-o
 %{
-bfLll_it  = zeros(N, R, Km1);
-bfLlr_it  = zeros(N, R, Km1);
-bfLrl_it  = zeros(N, R, Km1);
-bfLrr_it  = zeros(N, R, Km1);
-for i = 1:Km1
-    bfLll_it(:, :, i) = 1./2.*bfffll_m.'./det(i  , 1); % +      o->
-    bfLlr_it(:, :, i) =-1./2.*bffflr_m.'./det(i  , 1); % -      o->
-    bfLrl_it(:, :, i) = 1./2.*bfffrl_m.'./det(i+1, 1); % + = -- <-o
-    bfLrr_it(:, :, i) =-1./2.*bfffrr_m.'./det(i+1, 1); % -      <-o
-end
-bfrb1_M   = bfr_M(1, :);
-bflb2_M   = bfl_M(K, :);
-bfLllb2t  = bfffll_m.'./det(K, 1); % +      o->
-bfLlrb2t  =-bflb2_M*bf_;           % -      o->
-bfLrlb1t  = bfrb1_M*bf_;           % + = -- <-o
-bfLrrb1t  =-bfffrr_m.'./det(1, 1); % -      <-o
-%}
-%{
 penll_l_i = zeros(N, N, Km1);
 penll_r_i = zeros(N, N, Km1);
 penlr_l_i = zeros(N, N, Km1);
@@ -200,37 +182,37 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % ASSIGN TO (CELL)...
 %--------------------------------------------------------------------------
-Wbf_            = Wbf.';
-dc_m            = bd_*Wbf_m;
-intg.R          = R;
-intg.xqc        = xqc;
-intg.bd         = bd;
-intg.bf         = bf;
-intg.bd_        = bd_;
-intg.bf_        = bf_;
-intg.Wbf        = Wbf;
-intg.Wbf_       = Wbf_;
-intg.mass       = mass;
-intg.Wbd_m      = Wbd_m;
-intg.Wbf_m      = Wbf_m;
-intg.dc_m       = dc_m;
+Wbf_             = Wbf.';
+dc_m             = bd_*Wbf_m;
+intg.R           = R;
+intg.xqc         = xqc;
+intg.bd          = bd;
+intg.bf          = bf;
+intg.bd_         = bd_;
+intg.bf_         = bf_;
+intg.Wbf         = Wbf;
+intg.Wbf_        = Wbf_;
+intg.mass        = mass;
+intg.Wbd_m       = Wbd_m;
+intg.Wbf_m       = Wbf_m;
+intg.dc_m        = dc_m;
 %--------------------------------------------------------------------------
-intg.DDr        = DDr;
-intg.DFr        = DFr;
-intg.FDr        = FDr;
-intg.visu       = sum(Wbf_, 2)./sum(W_, 1);
-intg.F_dof      = inittype(1, Fh, xdc, xqc, Wbf_m);
+intg.DDr         = DDr;
+intg.DFr         = DFr;
+intg.FDr         = FDr;
+intg.visu        = sum(Wbf_, 2)./sum(W_, 1);
+intg.F_dof       = inittype(1, Fh, xdc, xqc, Wbf_m);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % ASSIGN TO (FACE)...
 %--------------------------------------------------------------------------
-bDl              = bdl./det;
-bDr              = bdr./det;
-bDl_             = bDl.';
-bDr_             = bDr.';
 bdl_             = bdl.';
 bdr_             = bdr.';
 bfl_             = bfl.';
 bfr_             = bfr.';
+bDl              = bdl./det;
+bDr              = bdr./det;
+bDl_             = bDl.';
+bDr_             = bDr.';
 bflLll_i_Mt      = bflLll_i_M.';
 bfrLrl_i_Mt      = bfrLrl_i_M.';
 bflLlr_i_Mt      = bflLlr_i_M.';
@@ -242,16 +224,17 @@ bfrLrrb1_Mt      = bfrLrrb1_M.';
 bfl_i_Mt         = bfl_i_M.';
 bfr_i_Mt         = bfr_i_M.';
 eta              = 2;
+%--------------------------------------------------------------------------
 intg.bDl         = bDl;
 intg.bDr         = bDr;
 intg.bfl         = bfl;
 intg.bfr         = bfr;
-intg.bDl_        = bDl_;
-intg.bDr_        = bDr_;
 intg.bdl_        = bdl_;
 intg.bdr_        = bdr_;
 intg.bfl_        = bfl_;
 intg.bfr_        = bfr_;
+intg.bDl_        = bDl_;
+intg.bDr_        = bDr_;
 intg.bDl_M       = bDl_M;
 intg.bDr_M       = bDr_M;
 intg.bfl_M       = bfl_M;

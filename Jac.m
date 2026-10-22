@@ -1,4 +1,4 @@
-function [g] = Jac(basis, mesh, intg, flag, nu, c, U_dof, ulb1, urb2, dlb1, drb2, d1Ul, d1Ux, d2U_dofx) %#ok<INUSD>
+function [g] = Jac(basis, mesh, intg, flag, nu, c, U_dof, ulb1, urb2, dlb1, drb2, dU, dUf)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % CELL:
 %--------------------------------------------------------------------------
@@ -18,16 +18,18 @@ NN           = N*N;
 val          = zeros(TNN, 1);
 rhs          = zeros(K, N);
 %--------------------------------------------------------------------------
-C_dof        = nu+U_dof;
-d1Uc         = U_dof*bd_./det;
-C            = C_dof*bf_;
-d1Ult        = d1Ul.';
-d1Uct        = d1Uc.';
-Ct           = C.';
-d1Ult1       = d1Ult(:);
-d1Uct1       = d1Uct(:);
-Ct1          =    Ct(:);
-Jacd_RK_NN   = DFr.*d1Uct1+DDr.*Ct1-2.*c.*FDr.*d1Ult1;
+A_dof        = nu+U_dof;
+alb1         = nu+ulb1;
+arb2         = nu+urb2;
+dUc          = U_dof*bd_./det;
+A            = A_dof*bf_;
+dU_t         = dU.';
+dUct         = dUc.';
+At           = A.';
+d1Ult1       = dU_t(:);
+d1Uct1       = dUct(:);
+At1          =   At(:);
+Jacd_RK_NN   = DFr.*d1Uct1+DDr.*At1-2.*c.*FDr.*d1Ult1;
 Jacd_NN_K    = sum(reshape(Jacd_RK_NN.', NN, R, []), 2);
 Jacd_NN_K_1  = Jacd_NN_K(:);
 val(IJd_, 1) = Jacd_NN_K_1;
@@ -63,10 +65,14 @@ bfl_i_Mt    = intg.bfl_i_Mt;
 bfr_i_Mt    = intg.bfr_i_Mt;
 eta         = intg.eta;
 %--------------------------------------------------------------------------
+al_i        = A_dof(1:Km1, :)*bfl_;
+ar_i        = A_dof(2:K  , :)*bfr_;
 ul_i        = U_dof(1:Km1, :)*bfl_;
 ur_i        = U_dof(2:K  , :)*bfr_;
 dl_i        = U_dof(1:Km1, :)*bdl_./det(1:Km1, 1); % bD = bd/det
 dr_i        = U_dof(2:K  , :)*bdr_./det(2:K  , 1); % =
+arb1        = A_dof(1    , :)*bfr_;
+alb2        = A_dof(  K  , :)*bfl_;
 urb1        = U_dof(1    , :)*bfr_;
 ulb2        = U_dof(  K  , :)*bfl_;
 drb1        = U_dof(1    , :)*bDr_(:, 1);
@@ -81,14 +87,10 @@ for i = 1:Km1
     prli(i, :) = U_dof(i  , :)*bfrLrl_i_Mt(:, i);
     prri(i, :) = U_dof(i+1, :)*bfrLrr_i_Mt(:, i);
 end
+prb1        = U_dof(1    , :)*bfrLrrb1_Mt;
 plb1        = ulb1.*bfrLrlb1_Mt;
 prb2        = urb2.*bflLlrb2_Mt;
-nupul_i     = nu+ul_i;
-nupur_i     = nu+ur_i;
-nupurb1     = nu+urb1;
-nupulb2     = nu+ulb2;
-nupulb1     = nu+ulb1;
-nupurb2     = nu+urb2;
+plb2        = U_dof(  K  , :)*bflLllb2_Mt;
 %--------------------------------------------------------------------------
 if flag
     %----------------------------------------------------------------------
@@ -106,17 +108,17 @@ if flag
     J1Lrl_it = zeros(N, N, Km1);
     J1Lrr_it = zeros(N, N, Km1);
     for i = 1:Km1
-        J1Lll_it(:, :, i) = bfLll_it*(-2.*c.*d1Ult(:, i  ).*Wbf); % det already factored in! (transpose)
-        J1Llr_it(:, :, i) = bfLlr_it*(-2.*c.*d1Ult(:, i  ).*Wbf); % =
-        J1Lrl_it(:, :, i) = bfLrl_it*(-2.*c.*d1Ult(:, i+1).*Wbf); % =
-        J1Lrr_it(:, :, i) = bfLrr_it*(-2.*c.*d1Ult(:, i+1).*Wbf); % =
+        J1Lll_it(:, :, i) = bfLll_it*(-2.*c.*dU_t(:, i  ).*Wbf); % det already factored in! (transpose)
+        J1Llr_it(:, :, i) = bfLlr_it*(-2.*c.*dU_t(:, i  ).*Wbf); % =
+        J1Lrl_it(:, :, i) = bfLrl_it*(-2.*c.*dU_t(:, i+1).*Wbf); % =
+        J1Lrr_it(:, :, i) = bfLrr_it*(-2.*c.*dU_t(:, i+1).*Wbf); % =
     end
     J1Lll_it     = reshape(J1Lll_it, [NN, Km1]);
     J1Llr_it     = reshape(J1Llr_it, [NN, Km1]);
     J1Lrl_it     = reshape(J1Lrl_it, [NN, Km1]);
     J1Lrr_it     = reshape(J1Lrr_it, [NN, Km1]);
-    J1Lrrb1t     = bfLrrb1t*(-2.*c.*d1Ult(:, 1).*Wbf);
-    J1Lllb2t     = bfLllb2t*(-2.*c.*d1Ult(:, K).*Wbf);
+    J1Lrrb1t     = bfLrrb1t*(-2.*c.*dU_t(:, 1).*Wbf);
+    J1Lllb2t     = bfLllb2t*(-2.*c.*dU_t(:, K).*Wbf);
     VAL1dil_NN_1 = J1Lll_it(:);
     VAL1oil_NN_1 = J1Llr_it(:);
     VAL1oir_NN_1 = J1Lrl_it(:);
@@ -129,23 +131,23 @@ if flag
     val(IJdr)    = val(IJdr)-VAL1dir_NN_1;
     val(IJb1)    = val(IJb1)-VAL1db1_NN_1;
     val(IJb2)    = val(IJb2)-VAL1db2_NN_1;
-    rhs(1, :)    = (bfLrlb1t.*ulb1)*(-2.*c.*d1Ult(:, 1).*Wbf);
-    rhs(K, :)    = (bfLlrb2t.*urb2)*(-2.*c.*d1Ult(:, K).*Wbf);
+    rhs(1, :)    =-(bfLrlb1t.*ulb1)*(-2.*c.*dU_t(:, 1).*Wbf);
+    rhs(K, :)    =-(bfLlrb2t.*urb2)*(-2.*c.*dU_t(:, K).*Wbf);
     %----------------------------------------------------------------------
     %{
     aux          = zeros(TNN);
     aux(IJdl)    = aux(IJdl)-VAL1dil_NN_1;
-    aux(IJol)    =-VALoil_NN_1;
-    aux(IJor)    =-VALoir_NN_1;
-    aux(IJdr)    = aux(IJdr)-VAL1oil_NN_1;
-    aux(IJb1)    = aux(IJb1)-VAL1oir_NN_1;
-    aux(IJb2)    = aux(IJb2)-VAL1oir_NN_1;
+    aux(IJol)    =-VAL1oil_NN_1;
+    aux(IJor)    =-VAL1oir_NN_1;
+    aux(IJdr)    = aux(IJdr)-VAL1dir_NN_1;
+    aux(IJb1)    = aux(IJb1)-VAL1db1_NN_1;
+    aux(IJb2)    = aux(IJb2)-VAL1db2_NN_1;
     AUX          = Mat(aux);
     B_doft       = U_dof.';
     B1doft       = B_doft(:);
     X1doft       = AUX*B1doft;
-    X1dofI       = reshape(X1doft, [], K).'-rhs;
-    X1dofE       =-2.*c.*d1Ul.*d1Ux*Wbf.*det;
+    X1dofI       = reshape(X1doft, [], K).'+rhs;
+    X1dofE       =-dUf.*(-2.*c.*dU)*Wbf.*det;
     diffl1       = X1dofI-X1dofE; max(abs(diffl1), [], 'all')
     %}
     %----------------------------------------------------------------------
@@ -171,30 +173,30 @@ J2bLrrb1t = zeros(N, N);
 J2bLllb2t = zeros(N, N);
 if flag
     for i = 1:Km1
-        J2bLll_it(:, :, i) = bfl_*(1./2.*bDl(i  , :).*(nupul_i(i, 1)+(ul_i(i, 1)-ur_i(i, 1)))); % (transpose): {adv}[u]+dv[u]
-        J2bLlr_it(:, :, i) =-bfr_*(1./2.*bDl(i  , :).*(nupul_i(i, 1)));                         % =
-        J2bLrl_it(:, :, i) = bfl_*(1./2.*bDr(i+1, :).*(nupur_i(i, 1)));                         % =
-        J2bLrr_it(:, :, i) =-bfr_*(1./2.*bDr(i+1, :).*(nupur_i(i, 1)+(ur_i(i, 1)-ul_i(i, 1)))); % =
+        J2bLll_it(:, :, i) = bfl_*(1./2.*bDl(i  , :).*(al_i(i, 1)+(ul_i(i, 1)-ur_i(i, 1)))); % (transpose): {adv}[u]+dv[u]
+        J2bLlr_it(:, :, i) =-bfr_*(1./2.*bDl(i  , :).*(al_i(i, 1)));                         % =
+        J2bLrl_it(:, :, i) = bfl_*(1./2.*bDr(i+1, :).*(ar_i(i, 1)));                         % =
+        J2bLrr_it(:, :, i) =-bfr_*(1./2.*bDr(i+1, :).*(ar_i(i, 1)+(ur_i(i, 1)-ul_i(i, 1)))); % =
     end
-    J2bLrrb1t =-bfr_*(bDr(1, :).*(nupurb1+(urb1-ulb1))); % =
-    J2bLllb2t = bfl_*(bDl(K, :).*(nupulb2+(ulb2-urb2))); % =
+    J2bLrrb1t =-bfr_*(bDr(1, :).*(arb1+(urb1-ulb1))); % =
+    J2bLllb2t = bfl_*(bDl(K, :).*(alb2+(ulb2-urb2))); % =
 end
 for i = 1:Km1
-    J2aLll_it(:, :, i) = (dl_i(i, 1).*bfl_+nupul_i(i, 1).*bDl_(:, i  ))./2*bfl; % (transpose): [v]{dau+adu}
-    J2aLlr_it(:, :, i) = (dr_i(i, 1).*bfr_+nupur_i(i, 1).*bDr_(:, i+1))./2*bfl; % =
-    J2aLrl_it(:, :, i) =-(dl_i(i, 1).*bfl_+nupul_i(i, 1).*bDl_(:, i  ))./2*bfr; % =
-    J2aLrr_it(:, :, i) =-(dr_i(i, 1).*bfr_+nupur_i(i, 1).*bDr_(:, i+1))./2*bfr; % =
-    
-    J2cLll_it(:, :, i) = (bfl_i_Mt(:, i).*(ul_i(i, 1)-ur_i(i, 1))+0.*(nupul_i(i, 1).*bflLll_i_Mt(:, i)+nupur_i(i, 1).*bfrLrl_i_Mt(:, i)))./2*bfl; % (transpose)
-    J2cLlr_it(:, :, i) = (bfl_i_Mt(:, i).*(ul_i(i, 1)-ur_i(i, 1))+0.*(nupul_i(i, 1).*bflLlr_i_Mt(:, i)+nupur_i(i, 1).*bfrLrr_i_Mt(:, i)))./2*bfl; % =
-    J2cLrl_it(:, :, i) =-(bfr_i_Mt(:, i).*(ur_i(i, 1)-ul_i(i, 1))+0.*(nupul_i(i, 1).*bflLll_i_Mt(:, i)+nupur_i(i, 1).*bfrLrl_i_Mt(:, i)))./2*bfr; % =
-    J2cLrr_it(:, :, i) =-(bfr_i_Mt(:, i).*(ur_i(i, 1)-ul_i(i, 1))+0.*(nupul_i(i, 1).*bflLlr_i_Mt(:, i)+nupur_i(i, 1).*bfrLrr_i_Mt(:, i)))./2*bfr; % =
+    J2aLll_it(:, :, i) = (dl_i(i, 1).*bfl_+al_i(i, 1).*bDl_(:, i  ))./2*bfl; % (transpose): [v]{dau+adu}
+    J2aLlr_it(:, :, i) = (dr_i(i, 1).*bfr_+ar_i(i, 1).*bDr_(:, i+1))./2*bfl; % =
+    J2aLrl_it(:, :, i) =-(dl_i(i, 1).*bfl_+al_i(i, 1).*bDl_(:, i  ))./2*bfr; % =
+    J2aLrr_it(:, :, i) =-(dr_i(i, 1).*bfr_+ar_i(i, 1).*bDr_(:, i+1))./2*bfr; % =
+
+    J2cLll_it(:, :, i) = (bfl_i_Mt(:, i).*(ul_i(i, 1)-ur_i(i, 1)).*0+(al_i(i, 1).*bflLll_i_Mt(:, i)+ar_i(i, 1).*bfrLrl_i_Mt(:, i)))./2*bfl; % (transpose)
+    J2cLlr_it(:, :, i) = (bfl_i_Mt(:, i).*(ul_i(i, 1)-ur_i(i, 1)).*0+(al_i(i, 1).*bflLlr_i_Mt(:, i)+ar_i(i, 1).*bfrLrr_i_Mt(:, i)))./2*bfl; % =
+    J2cLrl_it(:, :, i) =-(bfr_i_Mt(:, i).*(ur_i(i, 1)-ul_i(i, 1)).*0+(al_i(i, 1).*bflLll_i_Mt(:, i)+ar_i(i, 1).*bfrLrl_i_Mt(:, i)))./2*bfr; % =
+    J2cLrr_it(:, :, i) =-(bfr_i_Mt(:, i).*(ur_i(i, 1)-ul_i(i, 1)).*0+(al_i(i, 1).*bflLlr_i_Mt(:, i)+ar_i(i, 1).*bfrLrr_i_Mt(:, i)))./2*bfr; % =
 end
-J2aLrrb1t    =-(drb1.*bfr_+nupurb1.*bDr_(:, 1))./2*bfr; % (transpose)
-J2aLllb2t    = (dlb2.*bfl_+nupulb2.*bDl_(:, K))./2*bfl; % =
-J2cLrrb1t    =-(nupurb1.*bfrLrrb1_Mt)*bfr; % =
-J2cLllb2t    = (nupulb2.*bflLllb2_Mt)*bfl; % =
-J2Lll_it     = J2aLll_it+J2bLll_it-J2cLll_it.*eta; % note that l([U]) = -{v}[u]
+J2aLrrb1t    =-(drb1.*bfr_+arb1.*bDr_(:, 1))./2*bfr; % (transpose)
+J2aLllb2t    = (dlb2.*bfl_+alb2.*bDl_(:, K))./2*bfl; % =
+J2cLrrb1t    =-(arb1.*bfrLrrb1_Mt)*bfr; % =
+J2cLllb2t    = (alb2.*bflLllb2_Mt)*bfl; % =
+J2Lll_it     = J2aLll_it+J2bLll_it-J2cLll_it.*eta; % pen term is [v]{ar([u])}, where r([u]) = -{v}[u]) => minus sign
 J2Llr_it     = J2aLlr_it+J2bLlr_it-J2cLlr_it.*eta; % =
 J2Lrl_it     = J2aLrl_it+J2bLrl_it-J2cLrl_it.*eta; % =
 J2Lrr_it     = J2aLrr_it+J2bLrr_it-J2cLrr_it.*eta; % =
@@ -220,8 +222,8 @@ val(IJor)    = val(IJor)-VAL2oir_NN_1;
 val(IJdr)    = val(IJdr)-VAL2dir_NN_1;
 val(IJb1)    = val(IJb1)-VAL2db1_NN_1;
 val(IJb2)    = val(IJb2)-VAL2db2_NN_1;
-rhs(1, :)    = rhs(1, :)-(bfr.*(dlb1.*ulb1+nupulb1.*dlb1)./2-bDr(1, :).*nupurb1.*ulb1+bfr.*(nupurb1.*plb1).*eta); % <-o
-rhs(K, :)    = rhs(K, :)+(bfl.*(drb2.*urb2+nupurb2.*drb2)./2-bDl(K, :).*nupulb2.*urb2+bfl.*(nupulb2.*prb2).*eta); % o->
+rhs(1, :)    = rhs(1, :)-(bfr.*(dlb1.*ulb1+alb1.*dlb1)./2-bDr(1, :).*arb1.*ulb1+bfr.*(arb1.*plb1).*eta); % <-o
+rhs(K, :)    = rhs(K, :)+(bfl.*(drb2.*urb2+arb2.*drb2)./2-bDl(K, :).*alb2.*urb2+bfl.*(alb2.*prb2).*eta); % o->
 %
 aux          = zeros(TNN);
 aux(IJdl)    = aux(IJdl)+VAL2dil_NN_1;
@@ -235,7 +237,7 @@ B_doft       = U_dof.';
 B1doft       = B_doft(:);
 X1doft       = AUX*B1doft;
 X1dofI       = reshape(X1doft, [], K).';%+rhs;
-X1dofE       = d2U_dofx;
+X1dofE       = func_dAdUjac(basis, mesh, intg, A_dof, U_dof, flag, alb1, arb2, ulb1, urb2, dlb1, drb2);
 mass         = intg.mass;
 X1dofE       = X1dofE*mass.*det;
 diff_2       = X1dofI-X1dofE; max(abs(diff_2), [], 'all')

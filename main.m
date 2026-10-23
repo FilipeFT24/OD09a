@@ -55,15 +55,15 @@ rng("default");
 N     = basis.N;
 U_dof = zeros(K, N);
 U_dof = rand(size(U_dof));
-% ulb1  = 1.50;
-% urb2  = 2.25;
-% dlb1  = 2.50;
-% drb2  = 4.00;
+ulb1  = 1.50;
+urb2  = 2.25;
+dlb1  = 2.50;
+drb2  = 4.00;
 
-ulb1  =  Uh(Xl);
-urb2  =  Uh(Xr);
-dlb1  = dUh(Xl);
-drb2  = dUh(Xr);
+% ulb1  =  Uh(Xl);
+% urb2  =  Uh(Xr);
+% dlb1  = dUh(Xl);
+% drb2  = dUh(Xr);
 
 %{
 U_dof = inittype(0, Uh, mesh.xdc, intg.xqc, intg.Wbf_m);

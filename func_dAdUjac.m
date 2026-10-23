@@ -86,8 +86,8 @@ for i = 1:Km1
 end
 J2aLrrb1t    =-(drb1.*bfr_+arb1.*bDr_(:, 1))./2*bfr; % (transpose)
 J2aLllb2t    = (dlb2.*bfl_+alb2.*bDl_(:, K))./2*bfl; % =
-J2cLrrb1t    =-(bfrLrrb1_Mt.*((urb1-ulb1).*0+arb1))*bfr; % =
-J2cLllb2t    = (bflLllb2_Mt.*((ulb1-urb1).*0+alb2))*bfl; % =
+J2cLrrb1t    =-(bfrLrrb1_Mt.*(urb1-ulb1+arb1))*bfr;  % =
+J2cLllb2t    = (bflLllb2_Mt.*(ulb2-urb2+alb2))*bfl;  % =
 %--------------------------------------------------------------------------
 J2Lll_it     = J2aLll_it+J2bLll_it-J2cLll_it.*eta; % pen term is [v]{ar([u])}, where r([u]) = -{v}[u]) => minus sign
 J2Llr_it     = J2aLlr_it+J2bLlr_it-J2cLlr_it.*eta; % =
@@ -157,9 +157,11 @@ pr_i         = prli+prri;
 p_b1         = prb1+plb1;
 p_b2         = plb2+prb2;
 du_i         = ul_i-ur_i;
+dub1         = urb1-ulb1;
+dub2         = ulb2-urb2;
 ap_o2_i      = (al_i.*pl_i+ar_i.*pr_i+du_i.*(plli-prri))./2; % (alLll+arLrl)*ul+(alLlr+arLrr)*ur+(ul-ur)*(Lll-Lrr) = al*(Lll+Llr)+ar*(Lrl+Lrr)+(ul-ur)*(Lll-Lrr)
-ap_b1        = arb1.*p_b1;
-ap_b2        = alb2.*p_b2;
+ap_b1        = (arb1.*p_b1+dub1.*prb1);
+ap_b2        = (alb2.*p_b2+dub2.*plb2);
 %--------------------------------------------------------------------------
 dAdU_doflib  = zeros(Km1, N);
 dAdU_dofrib  = zeros(Km1, N);

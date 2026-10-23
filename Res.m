@@ -16,7 +16,7 @@ F        = F_dof*bf_;
 dU       = dU_dof*bf_;
 dAdU     = dAdU_dof*bf_;
 dU2      = dU.^2;
-R        = dAdU-c.*dU2-F;
+R        =-dAdU-c.*dU2-F;
 R_dof    = R*Wbf.*det;
 %--------------------------------------------------------------------------
 dU_doff  = X1.dU_doff;
@@ -24,5 +24,13 @@ dUf      = dU_doff*bf_;
 g.dU     = dU;
 g.dUf    = dUf;   % aux. variable
 g.R_dof  = R_dof; % residual
+
+
+% res1 = load("res.mat");
+% res  = res1.R;
+% diffres = res-R_dof;
+% 
+% max(abs(diffres), [], 'all')
+
 %--------------------------------------------------------------------------
 end

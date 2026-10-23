@@ -153,10 +153,7 @@ if flag
     %----------------------------------------------------------------------
 end
 %--------------------------------------------------------------------------
-
-val = val.*0;
-rhs = rhs.*0;
-
+%
 J2aLll_it = zeros(N, N, Km1);
 J2aLlr_it = zeros(N, N, Km1);
 J2aLrl_it = zeros(N, N, Km1);
@@ -221,6 +218,7 @@ val(IJb1)    = val(IJb1)-VAL2db1_NN_1;
 val(IJb2)    = val(IJb2)-VAL2db2_NN_1;
 rhs(1, :)    = rhs(1, :)-(bfr.*(dlb1.*ulb1+alb1.*dlb1)./2-bDr(1, :).*arb1.*ulb1-bfr.*(arb1.*plb1).*eta); % <-o
 rhs(K, :)    = rhs(K, :)+(bfl.*(drb2.*urb2+arb2.*drb2)./2-bDl(K, :).*alb2.*urb2-bfl.*(alb2.*prb2).*eta); % o->
+%}
 %{
 aux          = zeros(TNN);
 aux(IJdl)    = aux(IJdl)+VAL2dil_NN_1;

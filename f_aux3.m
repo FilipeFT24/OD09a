@@ -13,10 +13,10 @@ W_  = basis.W_;
 N   = basis.N;
 R   = basis.R;
 Km1 = K-1;
-xqc = zeros(K, R);
+Xq  = zeros(K, R);
 for i = 1:K
     for r = 1:R
-        xqc(i, r) = det(i, 1).*QsP(r, 1)+V0T(i, 1);
+        Xq(i, r) = det(i, 1).*QsP(r, 1)+V0T(i, 1);
     end
 end
 %--------------------------------------------------------------------------
@@ -185,7 +185,7 @@ end
 Wbf_             = Wbf.';
 dc_m             = bd_*Wbf_m;
 intg.R           = R;
-intg.xqc         = xqc;
+intg.Xq          = Xq;
 intg.bd          = bd;
 intg.bf          = bf;
 intg.bd_         = bd_;
@@ -201,7 +201,7 @@ intg.DDr         = DDr;
 intg.DFr         = DFr;
 intg.FDr         = FDr;
 intg.visu        = sum(Wbf_, 2)./sum(W_, 1);
-intg.F_dof       = inittype(1, Fh, xdc, xqc, Wbf_m);
+intg.F_dof       = inittype(1, Fh, xdc, Xq, Wbf_m);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % ASSIGN TO (FACE)...
 %--------------------------------------------------------------------------

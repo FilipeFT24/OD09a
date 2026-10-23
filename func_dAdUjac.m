@@ -6,12 +6,16 @@ N            = basis.N;
 K            = mesh.K;
 det          = mesh.det;
 TNN          = mesh.TNN;
+IJd_         = mesh.IJd_;
 IJdl         = mesh.IJdl; % ll
 IJol         = mesh.IJol; % lr
 IJor         = mesh.IJor; % rl
 IJdr         = mesh.IJdr; % rr
 IJb1         = mesh.IJb1; % rrb1
 IJb2         = mesh.IJb2; % llb2
+bf_          = intg.bf_;
+DDr          = intg.DDr;
+R            = intg.R;
 bDl          = intg.bDl;
 bDr          = intg.bDr;
 bfl          = intg.bfl;
@@ -34,6 +38,14 @@ eta          = intg.eta;
 Km1          = K-1;
 NN           = N*N;
 val          = zeros(TNN, 1);
+%--------------------------------------------------------------------------
+A            = A_dof*bf_;
+At           = A.';
+At1          = At(:);
+VAL2_RK_NN   =-DDr.*At1;
+VAL2_NN_K    = sum(reshape(VAL2_RK_NN.', NN, R, []), 2);
+VAL2_NN_K_1  = VAL2_NN_K(:);
+val(IJd_, 1) = VAL2_NN_K_1;
 %--------------------------------------------------------------------------
 al_i         = A_dof(1:Km1, :)*bfl_;
 ar_i         = A_dof(2:K  , :)*bfr_;
@@ -105,12 +117,12 @@ VAL2oir_NN_1 = J2Lrl_it(:);
 VAL2dir_NN_1 = J2Lrr_it(:);
 VAL2db1_NN_1 = J2Lrrb1t(:);
 VAL2db2_NN_1 = J2Lllb2t(:);
-val(IJdl)    = val(IJdl)-VAL2dil_NN_1;
-val(IJol)    =-VAL2oil_NN_1;
-val(IJor)    =-VAL2oir_NN_1;
-val(IJdr)    = val(IJdr)-VAL2dir_NN_1;
-val(IJb1)    = val(IJb1)-VAL2db1_NN_1;
-val(IJb2)    = val(IJb2)-VAL2db2_NN_1;
+val(IJdl, 1) = val(IJdl, 1)+VAL2dil_NN_1;
+val(IJol, 1) = VAL2oil_NN_1;
+val(IJor, 1) = VAL2oir_NN_1;
+val(IJdr, 1) = val(IJdr, 1)+VAL2dir_NN_1;
+val(IJb1, 1) = val(IJb1, 1)+VAL2db1_NN_1;
+val(IJb2, 1) = val(IJb2, 1)+VAL2db2_NN_1;
 rhs          = zeros(K, N);
 rhs(1, :)    =-(bfr.*(dlb1.*ulb1+alb1.*dlb1)./2-bDr(1, :).*arb1.*ulb1-bfr.*(arb1.*plb1).*eta); % <-o
 rhs(K, :)    = (bfl.*(drb2.*urb2+arb2.*drb2)./2-bDl(K, :).*alb2.*urb2-bfl.*(alb2.*prb2).*eta); % o->
@@ -120,6 +132,9 @@ X.rhs        = rhs;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % EXPLICIT:
 %--------------------------------------------------------------------------
+%{
+bd_          = intg.bd_;
+Wbd_m        = intg.Wbd_m;
 bDl_M        = intg.bDl_M;
 bDr_M        = intg.bDr_M;
 bfl_M        = intg.bfl_M;
@@ -185,30 +200,33 @@ dAdU_dofb2a  = bflb2_M.*(aduo2b2+duuo2b2);
 dAdU_dofb1c  = bfrb1_M.*(ap_b1);
 dAdU_dofb2c  = bflb2_M.*(ap_b2);
 %--------------------------------------------------------------------------
-dAdU_doffjac           = zeros(K, N);
+A                      = A_dof*bf_; % nu+U
+dU                     = U_dof*bd_;
+AdU                    = A.*dU;
+dAdU_doffjac           =-AdU*Wbd_m./det.^2;
 dAdU_doffjac(1:Km1, :) = dAdU_doffjac(1:Km1, :)+(dAdU_doflia+dAdU_doflib-dAdU_doflic.*eta); % o-> (con+sym+pen) pen term is [v]{ar([u])}, where r([u]) = -{v}[u]) => minus sign
 dAdU_doffjac(2:K  , :) = dAdU_doffjac(2:K  , :)-(dAdU_dofria+dAdU_dofrib-dAdU_dofric.*eta); % <-o (con+sym+pen)
 dAdU_doffjac(1    , :) = dAdU_doffjac(1    , :)-(dAdU_dofb1a+dAdU_dofb1b-dAdU_dofb1c.*eta); % =
 dAdU_doffjac(  K  , :) = dAdU_doffjac(  K  , :)+(dAdU_dofb2a+dAdU_dofb2b-dAdU_dofb2c.*eta); % =
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% CHECK:
 %--------------------------------------------------------------------------
-aux       = zeros(TNN);
-aux(IJdl) = aux(IJdl)+VAL2dil_NN_1;
-aux(IJol) = VAL2oil_NN_1;
-aux(IJor) = VAL2oir_NN_1;
-aux(IJdr) = aux(IJdr)+VAL2dir_NN_1;
-aux(IJb1) = aux(IJb1)+VAL2db1_NN_1;
-aux(IJb2) = aux(IJb2)+VAL2db2_NN_1;
-Mat       = mesh.Jaux;
-AUX       = Mat(aux);
-B_doft    = U_dof.';
-B1doft    = B_doft(:);
-X1doft    = AUX*B1doft;
-X1dofI    = reshape(X1doft, [], K).'+rhs;
-X1dofE    = dAdU_doffjac;
-mass      = intg.mass;
-X1dofE    = X1dofE*mass.*det;
-diff_2    = X1dofI-X1dofE; max(abs(diff_2), [], 'all')
+aux          = zeros(TNN);
+aux(IJd_, 1) = VAL2_NN_K_1;
+aux(IJdl, 1) = aux(IJdl, 1)+VAL2dil_NN_1;
+aux(IJol, 1) = VAL2oil_NN_1;
+aux(IJor, 1) = VAL2oir_NN_1;
+aux(IJdr, 1) = aux(IJdr, 1)+VAL2dir_NN_1;
+aux(IJb1, 1) = aux(IJb1, 1)+VAL2db1_NN_1;
+aux(IJb2, 1) = aux(IJb2, 1)+VAL2db2_NN_1;
+Mat          = mesh.Jaux;
+AUX          = Mat(aux);
+B_doft       = U_dof.';
+B1doft       = B_doft(:);
+X1doft       = AUX*B1doft;
+X1dofI       = reshape(X1doft, [], K).'+rhs;
+X1dofE       = dAdU_doffjac;
+mass         = intg.mass;
+X1dofE       = X1dofE*mass.*det;
+diff_2       = X1dofI-X1dofE; max(abs(diff_2), [], 'all')
+%}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 end

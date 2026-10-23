@@ -10,8 +10,6 @@ IJd_         = mesh.IJd_;
 Mat          = mesh.Jac;
 R            = intg.R;
 bd_          = intg.bd_;
-bf_          = intg.bf_;
-DDr          = intg.DDr;
 DFr          = intg.DFr;
 FDr          = intg.FDr;
 NN           = N*N;
@@ -20,14 +18,11 @@ rhs          = zeros(K, N);
 %--------------------------------------------------------------------------
 A_dof        = nu+U_dof;
 dUc          = U_dof*bd_./det;
-A            = A_dof*bf_;
 dU_t         = dU.';
 dUct         = dUc.';
-At           = A.';
 d1Ult1       = dU_t(:);
 d1Uct1       = dUct(:);
-At1          =   At(:);
-Jacd_RK_NN   = DFr.*d1Uct1+DDr.*At1-2.*c.*FDr.*d1Ult1;
+Jacd_RK_NN   = DFr.*d1Uct1-2.*c.*FDr.*d1Ult1;
 Jacd_NN_K    = sum(reshape(Jacd_RK_NN.', NN, R, []), 2);
 Jacd_NN_K_1  = Jacd_NN_K(:);
 val(IJd_, 1) = Jacd_NN_K_1;
@@ -75,23 +70,23 @@ if flag
     VAL1dir_NN_1 = J1Lrr_it(:);
     VAL1db1_NN_1 = J1Lrrb1t(:);
     VAL1db2_NN_1 = J1Lllb2t(:);
-    val(IJdl)    = val(IJdl)-VAL1dil_NN_1;
-    val(IJol)    =-VAL1oil_NN_1;
-    val(IJor)    =-VAL1oir_NN_1;
-    val(IJdr)    = val(IJdr)-VAL1dir_NN_1;
-    val(IJb1)    = val(IJb1)-VAL1db1_NN_1;
-    val(IJb2)    = val(IJb2)-VAL1db2_NN_1;
+    val(IJdl, 1) = val(IJdl, 1)-VAL1dil_NN_1;
+    val(IJol, 1) =-VAL1oil_NN_1;
+    val(IJor, 1) =-VAL1oir_NN_1;
+    val(IJdr, 1) = val(IJdr, 1)-VAL1dir_NN_1;
+    val(IJb1, 1) = val(IJb1, 1)-VAL1db1_NN_1;
+    val(IJb2, 1) = val(IJb2, 1)-VAL1db2_NN_1;
     rhs(1, :)    =-(bfLrlb1t.*ulb1)*(-2.*c.*dU_t(:, 1).*Wbf);
     rhs(K, :)    =-(bfLlrb2t.*urb2)*(-2.*c.*dU_t(:, K).*Wbf);
     %----------------------------------------------------------------------
     %{
     aux          = zeros(TNN);
-    aux(IJdl)    = aux(IJdl)-VAL1dil_NN_1;
-    aux(IJol)    =-VAL1oil_NN_1;
-    aux(IJor)    =-VAL1oir_NN_1;
-    aux(IJdr)    = aux(IJdr)-VAL1dir_NN_1;
-    aux(IJb1)    = aux(IJb1)-VAL1db1_NN_1;
-    aux(IJb2)    = aux(IJb2)-VAL1db2_NN_1;
+    aux(IJdl, 1) = aux(IJdl, 1)-VAL1dil_NN_1;
+    aux(IJol, 1) =-VAL1oil_NN_1;
+    aux(IJor, 1) =-VAL1oir_NN_1;
+    aux(IJdr, 1) = aux(IJdr, 1)-VAL1dir_NN_1;
+    aux(IJb1, 1) = aux(IJb1, 1)-VAL1db1_NN_1;
+    aux(IJb2, 1) = aux(IJb2, 1)-VAL1db2_NN_1;
     AUX          = Mat(aux);
     B_doft       = U_dof.';
     B1doft       = B_doft(:);
@@ -106,35 +101,9 @@ end
 alb1      = nu+ulb1;
 arb2      = nu+urb2;
 X_dAdUjac = func_dAdUjac(basis, mesh, intg, A_dof, U_dof, flag, alb1, arb2, ulb1, urb2, dlb1, drb2);
-val       = val+X_dAdUjac.lhs;
-rhs       = rhs+X_dAdUjac.rhs;
+val       = val-X_dAdUjac.lhs;
+rhs       = rhs-X_dAdUjac.rhs;
 g.MAT     = Mat(val);
-g.B_dof   = rhs;
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-
-dia = load("mat_d.mat"); matd = dia.Jd;
-low = load("mat_l.mat"); matl = low.Jlo;
-upp = load("mat_u.mat"); matu = upp.Jup;
-
-soll = zeros(N, N, K);
-solu = zeros(N, N, K);
-sold = zeros(N, N, K);
-MAT =  Mat(val);
-for i = 1:K
-    sold(:, :, i) = MAT((i-1)*N+(1:N), (i-1)*N+(1:N));
-    if i > 1
-        soll(:, :, i) = MAT((i-1)*N+(1:N), (i-2)*N+(1:N));
-    end
-    if i < K
-        solu(:, :, i) = MAT((i-1)*N+(1:N), (i)*N+(1:N));
-    end
-end
-A = full(MAT);
-
-diffd = sold-matd; max(abs(diffd), [], 'all')
-diffu = solu-matu; max(abs(diffu), [], 'all')
-diffl = soll-matl; max(abs(diffl), [], 'all')
-
+g.R_dof   = rhs;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 end

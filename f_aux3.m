@@ -1,4 +1,4 @@
-function [intg] = f_aux3(basis, mesh, Fh)
+function [intg] = f_aux3(basis, mesh, Fh, Gh)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % CELL:
 %--------------------------------------------------------------------------
@@ -184,6 +184,11 @@ end
 %--------------------------------------------------------------------------
 Wbf_             = Wbf.';
 dc_m             = bd_*Wbf_m;
+F_dof            = inittype(1, Fh, xdc, Xq, Wbf_m);
+G_dof            = inittype(1, Gh, xdc, Xq, Wbf_m);
+G                = G_dof*bf_;
+Gkdof            = G*Wbf.*det;
+%--------------------------------------------------------------------------
 intg.R           = R;
 intg.Xq          = Xq;
 intg.bd          = bd;
@@ -201,7 +206,8 @@ intg.DDr         = DDr;
 intg.DFr         = DFr;
 intg.FDr         = FDr;
 intg.visu        = sum(Wbf_, 2)./sum(W_, 1);
-intg.F_dof       = inittype(1, Fh, xdc, Xq, Wbf_m);
+intg.F_dof       = F_dof;
+intg.Gkdof       = Gkdof;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % ASSIGN TO (FACE)...
 %--------------------------------------------------------------------------

@@ -18,11 +18,11 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % DATA:
 %--------------------------------------------------------------------------
-K     = [10, 20, 40, 80];
+K     = [5, 10, 20, 40, 80];
 p     = [1, 2, 3, 4];
-tol   = 10*eps;
-Xl    =-0.25;
-Xr    = 1.25;
+tol   = 100*eps;
+Xl    = 0;
+Xr    = 1;
 dX    = Xr-Xl;
 h     = dX./K;
 %--------------------------------------------------------------------------
@@ -33,17 +33,29 @@ Uh    = @(x) sin(arg(x));
 dUh   = @(x) pi.*cos(arg(x));
 dAdUh = @(x)-pi.^2.*(sin(arg(x)).^2+nu.*sin(arg(x))-cos(arg(x)).^2);
 fh    = @(x) pi.^2.*((nu+sin(pi.*x)).*sin(pi.*x)-(1+c).*cos(pi.*x).^2);
+%--------------------------------------------------------------------------
+Ph    = @(x) sin(arg(x));
+dPh   = @(x) pi.*cos(arg(x));
+gh    = @(x) pi.^2.*(cos(arg(x)).^2+sin(arg(x))); % adjoint rhs
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % LOOP:
 %--------------------------------------------------------------------------
 flag  = false;
-nh    = size(K , 2);
-np    = size(p , 2);
-ec    = cell(nh, 2);
-l2    = cell(1 , 2);
+nh    = size(K, 2);
+np    = size(p, 2);
+Fd    = cell(1, 2);  % primal  error distribution
+Fda   = cell(1, 2);  % adjoint error distribution
+l2    = cell(1, 2);  % primal  error in the        l2-norm
+h1    = cell(1, 2);  % primal  error in the broken h1-norm
+l2a   = cell(1, 2);  % adjoint error in the        l2-norm
+h1a   = cell(1, 2);  % adjoint error in the broken h1-norm
+bfunc = cell(1, np);
+vfunc = cell(1, np);
 for i = 1:2
     for j = 1:nh
-        ec{j, i} = zeros(K(1, j), np);
+        for k = 1:np
+            Fd{1, i}{j, k} = zeros(K(1, j), p(1, k)+1);
+        end
     end
     l2{1, i} = zeros(nh, np);
     if i == 2
@@ -55,21 +67,22 @@ for i = 1:2
             Xvt   = Xl:dX/K(1, j):Xr;
             basis = f_aux1(p(1, k));
             mesh  = f_aux2(basis, Xvt);
-            intg  = f_aux3(basis, mesh, fh);
+            intg  = f_aux3(basis, mesh, fh, gh);
             N     = basis.N;
             U_dof = zeros(K(1, j), N);
             delta = realmax;
+
+            bfunc{1, k} = basis.fh;
+            vfunc{1, k} = intg.visu;
+
             %--------------------------------------------------------------
             while delta > tol
                 C_dof  = nu+U_dof;
                 g1     = Res(basis, mesh, intg, flag, nu, c, U_dof, Uh, dUh, dAdUh);
-                dU     = g1.dU;
-                dUf    = g1.dUf;
-                g2     = Jac(basis, mesh, intg, flag, nu, c, U_dof, Uh, dUh, dU, dUf); % this "dU" already contains the lifting contribution!
-                R1dof  = g1.R_dof;
-                R2dof  = g2.R_dof;
+                g2     = Jac(basis, mesh, intg, flag, nu, c, U_dof, Uh, dUh, g1.dU, g1.dUf); % this "dU" already contains the lifting contribution!
+                R_dof  = g1.R_dof;
                 J_mat  = g2.MAT;
-                B_dof  = R1dof;%-R2dof;
+                B_dof  = R_dof;
                 B_doft = B_dof.';
                 B1doft = B_doft(:);
                 X1doft = J_mat\B1doft;
@@ -77,8 +90,19 @@ for i = 1:2
                 U_dof  = U_dof-X1dof;
                 delta  = norm(X1dof, Inf);
             end
-            [ec{j, i}(:, k), ...
-                l2{1, i}(j, k)] = enorm(basis, mesh, intg, U_dof, Uh);
+            [Fd{1, i}{j, k}, l2{1, i}(j, k), h1{1, i}(j, k)] = ...
+                enorm(basis, mesh, intg, U_dof, Uh, dUh);
+            %--------------------------------------------------------------
+            g1     = Res(basis, mesh, intg, flag, nu, c, U_dof, Uh, dUh, dAdUh);
+            g2     = Jac(basis, mesh, intg, flag, nu, c, U_dof, Uh, dUh, g1.dU, g1.dUf);
+            J_mat  = g2.MAT;
+            G_dof  = intg.Gkdof;
+            G_doft = G_dof.';
+            G1doft = G_doft(:);
+            P_doft = J_mat.'\G1doft;
+            P_dof  = reshape(P_doft, [], K(1, j)).';
+            [Fda{1, i}{j, k}, l2a{1, i}(j, k), h1a{1, i}(j, k)] = ...
+                enorm(basis, mesh, intg, P_dof, Ph, dPh);
             %--------------------------------------------------------------
         end
     end
@@ -86,14 +110,57 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % PLOT:
 %--------------------------------------------------------------------------
-fprintf("  N   |   Y          N             Y\n-------------   -------------------------\n");
+fprintf("______________________________________________________________________________________________\n");
+fprintf("______________________________________________________________________________________________\n");
+fprintf("                                        PRIMAL PROBLEM\n");
+fprintf("----------------------------------------------------------------------------------------------\n");
+fprintf("                   l2-norm                                          h1-norm (broken)          \n");
+fprintf("---------------------------------------------    ---------------------------------------------\n");
+fprintf("   N   |    Y           N      |      Y             N   |    Y           N      |      Y      \n---------------   ---------------------------    ---------------   ---------------------------\n");
 for k = 1:np
-    for j = 2:nh
-        fprintf("%.3f | %.3f   %.5e | %.5e\n", ...
-            log(l2{1, 1}(j, k)./l2{1, 1}(j-1, k))./log(h(1, j)./h(1, j-1)), ...
-            log(l2{1, 2}(j, k)./l2{1, 2}(j-1, k))./log(h(1, j)./h(1, j-1)), l2{1, 1}(j, k), l2{1, 2}(j, k));
+    for j = 1:nh
+        if j == 1
+            fprintf("                  %.6e | %.6e                      %.6e | %.6e\n", l2{1, 1}(j, k), l2{1, 2}(j, k), h1{1, 1}(j, k), h1{1, 2}(j, k));
+        else
+            fprintf("%.4f | %.4f   %.6e | %.6e    %.4f | %.4f   %.6e | %.6e\n", ...
+                log(l2{1, 1}(j, k)./l2{1, 1}(j-1, k))./log(h(1, j)./h(1, j-1)), ...
+                log(l2{1, 2}(j, k)./l2{1, 2}(j-1, k))./log(h(1, j)./h(1, j-1)), l2{1, 1}(j, k), l2{1, 2}(j, k), ...
+                log(h1{1, 1}(j, k)./h1{1, 1}(j-1, k))./log(h(1, j)./h(1, j-1)), ...
+                log(h1{1, 2}(j, k)./h1{1, 2}(j-1, k))./log(h(1, j)./h(1, j-1)), h1{1, 1}(j, k), h1{1, 2}(j, k));
+        end
     end
-    fprintf("-------------   -------------------------\n");
+    fprintf("---------------   ---------------------------    ---------------   ---------------------------\n");
 end
-%Plot1(mesh, ec, l2, 0, "Toy (1).pdf");
+fprintf("\n");
+fprintf("______________________________________________________________________________________________\n");
+fprintf("______________________________________________________________________________________________\n");
+fprintf("                                       ADJOINT PROBLEM\n");
+fprintf("----------------------------------------------------------------------------------------------\n");
+fprintf("                   l2-norm                                          h1-norm (broken)          \n");
+fprintf("---------------------------------------------    ---------------------------------------------\n");
+fprintf("   N   |    Y           N      |      Y             N   |    Y           N      |      Y      \n---------------   ---------------------------    ---------------   ---------------------------\n");
+for k = 1:np
+    for j = 1:nh
+        if j == 1
+            fprintf("                  %.6e | %.6e                      %.6e | %.6e\n", l2a{1, 1}(j, k), l2a{1, 2}(j, k), h1a{1, 1}(j, k), h1a{1, 2}(j, k));
+        else
+            if h1a{1, 1}(j-1, k) >= h1a{1, 1}(j, k)
+                fprintf("%.4f | %.4f   %.6e | %.6e    %.4f | %.4f   %.6e | %.6e\n", ...
+                    log(l2a{1, 1}(j, k)./l2a{1, 1}(j-1, k))./log(h(1, j)./h(1, j-1)), ...
+                    log(l2a{1, 2}(j, k)./l2a{1, 2}(j-1, k))./log(h(1, j)./h(1, j-1)), l2a{1, 1}(j, k), l2a{1, 2}(j, k), ...
+                    log(h1a{1, 1}(j, k)./h1a{1, 1}(j-1, k))./log(h(1, j)./h(1, j-1)), ...
+                    log(h1a{1, 2}(j, k)./h1a{1, 2}(j-1, k))./log(h(1, j)./h(1, j-1)), h1a{1, 1}(j, k), h1a{1, 2}(j, k));
+            else
+                fprintf("%.4f | %.4f   %.6e | %.6e   %.4f | %.4f   %.6e | %.6e\n", ...
+                    log(l2a{1, 1}(j, k)./l2a{1, 1}(j-1, k))./log(h(1, j)./h(1, j-1)), ...
+                    log(l2a{1, 2}(j, k)./l2a{1, 2}(j-1, k))./log(h(1, j)./h(1, j-1)), l2a{1, 1}(j, k), l2a{1, 2}(j, k), ...
+                    log(h1a{1, 1}(j, k)./h1a{1, 1}(j-1, k))./log(h(1, j)./h(1, j-1)), ...
+                    log(h1a{1, 2}(j, k)./h1a{1, 2}(j-1, k))./log(h(1, j)./h(1, j-1)), h1a{1, 1}(j, k), h1a{1, 2}(j, k));
+            end
+        end
+    end
+    fprintf("---------------   ---------------------------    ---------------   ---------------------------\n");
+end
+
+%Plot1(Xl, Xr, Fd, l2, bfunc, vfunc, 0, "Toy (1).pdf");
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

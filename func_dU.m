@@ -1,4 +1,4 @@
-function [X] = func_dU(basis, mesh, intg, U_dof, flag, ulb1, urb2, funch) %#ok<INUSD> 
+function [X] = func_dU(basis, mesh, intg, U_dof, flag, ulb1, urb2, dUh) %#ok<INUSD> 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % CELL:
 %--------------------------------------------------------------------------
@@ -30,6 +30,7 @@ if flag
     ur_i              = U_dof(2:K  , :)*bfr_;
     urb1              = U_dof(1    , :)*bfr_;
     ulb2              = U_dof(  K  , :)*bfl_;
+    
     ujil              = ul_i-ur_i;
     ujir              =-ujil;
     ujb1              = urb1-ulb1;

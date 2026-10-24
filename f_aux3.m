@@ -263,15 +263,5 @@ intg.bfLrrb1t    = bfLrrb1t; % rr
 intg.bfLrlb1t    = bfLrlb1t; % rl
 intg.bfLllb2t    = bfLllb2t; % ll
 intg.bfLlrb2t    = bfLlrb2t; % lr
-%{
-intg.penll_l_i   = penll_l_i;
-intg.penll_r_i   = penll_r_i;
-intg.penlr_l_i   = penlr_l_i;
-intg.penlr_r_i   = penlr_r_i;
-intg.penrl_l_i   = penrl_l_i;
-intg.penrl_r_i   = penrl_r_i;
-intg.penrr_l_i   = penrr_l_i;
-intg.penrr_r_i   = penrr_r_i;
-%}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 end

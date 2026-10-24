@@ -18,21 +18,14 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % DATA:
 %--------------------------------------------------------------------------
-flag  = 1; % 0: w/o lifting, 1: w/ lifting
-p     = 1;
-%{
-h     = 0.01;
-Xvt   = 0:h:1;
-% Xvt(1, 2) = 0.01;
-% Xvt(1, 3) = 0.072;
-% Xvt(1, 4) = 0.123;
-% Xvt(1, 7) = 0.265;
-
-%}
-h     = 0.005;
-Xvt   =-0.25:h:1.25;
-
-
+K     = [10, 20, 40, 80];
+p     = [1, 2, 3, 4];
+tol   = 10*eps;
+Xl    =-0.25;
+Xr    = 1.25;
+dX    = Xr-Xl;
+h     = dX./K;
+%--------------------------------------------------------------------------
 nu    = 1;
 c     = 0.5;
 arg   = @(x) pi.*x;
@@ -40,67 +33,67 @@ Uh    = @(x) sin(arg(x));
 dUh   = @(x) pi.*cos(arg(x));
 dAdUh = @(x)-pi.^2.*(sin(arg(x)).^2+nu.*sin(arg(x))-cos(arg(x)).^2);
 fh    = @(x) pi.^2.*((nu+sin(pi.*x)).*sin(pi.*x)-(1+c).*cos(pi.*x).^2);
-%--------------------------------------------------------------------------
-basis = f_aux1(p);
-mesh  = f_aux2(basis, Xvt);
-intg  = f_aux3(basis, mesh, fh);
-visu  = intg.visu;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % LOOP:
 %--------------------------------------------------------------------------
-delta = realmax;
-tol   = 1e-12;
-%--------------------------------------------------------------------------
-N     = basis.N;
-K     = mesh.K;
-Ke    = K+1;
-Xl    = Xvt(1,   1);
-Xr    = Xvt(1, end);
-%--------------------------------------------------------------------------
-U_dof = zeros(K, N);
-ulb1  =  Uh(Xl);
-urb2  =  Uh(Xr);
-dlb1  = dUh(Xl);
-drb2  = dUh(Xr);
-%{
-rng("default");
-U_dof = rand(size(U_dof));
-ulb1  = 1.50;
-urb2  = 2.25;
-dlb1  = 2.50;
-drb2  = 4.00;
-%}
-%--------------------------------------------------------------------------
-while delta > tol
-    %----------------------------------------------------------------------
-    C_dof  = nu+U_dof;
-    g1     = Res(basis, mesh, intg, flag, nu, c, U_dof, ulb1, urb2, dlb1, drb2, dUh, dAdUh);
-    dU     = g1.dU;
-    dUf    = g1.dUf;
-    g2     = Jac(basis, mesh, intg, flag, nu, c, U_dof, ulb1, urb2, dlb1, drb2, dU, dUf); % this "dU" already contains the lifting contribution!
-    %----------------------------------------------------------------------
-    R1dof  = g1.R_dof;
-    R2dof  = g2.R_dof;
-    J_mat  = g2.MAT;
-    B_dof  = R1dof;%-R2dof;
-    B_doft = B_dof.';
-    B1doft = B_doft(:);
-    X1doft = J_mat\B1doft;
-    X1dof  = reshape(X1doft, [], K).'; % \delta u
-    U_dof  = U_dof-X1dof;
-    delta  = norm(X1dof, Inf);
-    %----------------------------------------------------------------------
-
-%     lhs    = load("LHS.mat"); LHS = lhs.J;
-%     rhs    = load("RHS.mat"); RHS = rhs.R;
-%     new    = load("NEW.mat"); SOL = new.U;
-%     diff_l = J_mat -LHS; max(abs(diff_l), [], 'all')
-%     diff_r = B1doft-RHS; max(abs(diff_r), [], 'all')
-%     U_doft = U_dof.';
-%     U1doft = U_doft(:);
-%     diff_u = U1doft-SOL; max(abs(diff_u), [], 'all')
-
+flag  = false;
+nh    = size(K , 2);
+np    = size(p , 2);
+ec    = cell(nh, 2);
+l2    = cell(1 , 2);
+for i = 1:2
+    for j = 1:nh
+        ec{j, i} = zeros(K(1, j), np);
+    end
+    l2{1, i} = zeros(nh, np);
+    if i == 2
+        flag = true;
+    end
+    for j = 1:nh
+        for k = 1:np
+            %--------------------------------------------------------------
+            Xvt   = Xl:dX/K(1, j):Xr;
+            basis = f_aux1(p(1, k));
+            mesh  = f_aux2(basis, Xvt);
+            intg  = f_aux3(basis, mesh, fh);
+            N     = basis.N;
+            U_dof = zeros(K(1, j), N);
+            delta = realmax;
+            %--------------------------------------------------------------
+            while delta > tol
+                C_dof  = nu+U_dof;
+                g1     = Res(basis, mesh, intg, flag, nu, c, U_dof, Uh, dUh, dAdUh);
+                dU     = g1.dU;
+                dUf    = g1.dUf;
+                g2     = Jac(basis, mesh, intg, flag, nu, c, U_dof, Uh, dUh, dU, dUf); % this "dU" already contains the lifting contribution!
+                R1dof  = g1.R_dof;
+                R2dof  = g2.R_dof;
+                J_mat  = g2.MAT;
+                B_dof  = R1dof;%-R2dof;
+                B_doft = B_dof.';
+                B1doft = B_doft(:);
+                X1doft = J_mat\B1doft;
+                X1dof  = reshape(X1doft, [], K(1, j)).'; % \delta u
+                U_dof  = U_dof-X1dof;
+                delta  = norm(X1dof, Inf);
+            end
+            [ec{j, i}(:, k), ...
+                l2{1, i}(j, k)] = enorm(basis, mesh, intg, U_dof, Uh);
+            %--------------------------------------------------------------
+        end
+    end
 end
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% PLOT:
 %--------------------------------------------------------------------------
-Plot1(basis, mesh, intg, U_dof, Uh, 0, "Toy (1).pdf");
+fprintf("  N   |   Y          N             Y\n-------------   -------------------------\n");
+for k = 1:np
+    for j = 2:nh
+        fprintf("%.3f | %.3f   %.5e | %.5e\n", ...
+            log(l2{1, 1}(j, k)./l2{1, 1}(j-1, k))./log(h(1, j)./h(1, j-1)), ...
+            log(l2{1, 2}(j, k)./l2{1, 2}(j-1, k))./log(h(1, j)./h(1, j-1)), l2{1, 1}(j, k), l2{1, 2}(j, k));
+    end
+    fprintf("-------------   -------------------------\n");
+end
+%Plot1(mesh, ec, l2, 0, "Toy (1).pdf");
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

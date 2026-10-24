@@ -1,4 +1,4 @@
-function [] = Plot1(basis, mesh, intg, U_dof, Uh, export, fid)
+function [] = Plot1(mesh, ec, l2, export, fid)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 fn = fieldnames(get(groot, 'factory'));
 fc = find(contains(fn, 'Interpreter'));
@@ -24,19 +24,6 @@ xtitle      = "$x$";
 ytitle1     = "$u$";
 ytitle2     = "$e_{c}$";
 layer       = "bottom";
-%--------------------------------------------------------------------------
-W_          = basis.W_;
-det         = mesh.det;
-Xq          = intg.Xq;
-bf_         = intg.bf_;
-visu        = intg.visu;
-%--------------------------------------------------------------------------
-Udc         = U_dof*visu;
-Udq         = U_dof*bf_;
-Uaq         = Uh(Xq);
-e_q         = Udq-Uaq;
-e_c         = e_q.^2*W_.*det(:, 1);
-en2         = sqrt(sum(e_c, 1));
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if flag(1, 1)
     f1 = figure('Color', 'w', 'Windowstate', 'maximized', 'Renderer', 'painters');

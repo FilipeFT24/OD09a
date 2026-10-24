@@ -53,7 +53,8 @@ IJb2 = IJd_(Km1NN+(1:NN)   , 1);
 %--------------------------------------------------------------------------
 mesh.K    = K;
 mesh.Xc   = Xc;
-mesh.Xv   = Xv;
+mesh.Xl   = Xv(1 , 1);
+mesh.Xr   = Xv(Ke, 1);
 mesh.det  = det;
 mesh.V0T  = V0V;
 mesh.xdc  = xdc;

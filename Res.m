@@ -1,10 +1,16 @@
-function [g] = Res(basis, mesh, intg, flag, nu, c, U_dof, ulb1, urb2, dlb1, drb2, dUh, dAdUh)
+function [g] = Res(basis, mesh, intg, flag, nu, c, U_dof, Uh, dUh, dAdUh)
 %--------------------------------------------------------------------------
+Xl       = mesh.Xl;
+Xr       = mesh.Xr;
 det      = mesh.det;
 bf_      = intg.bf_;
 Wbf      = intg.Wbf;
 %--------------------------------------------------------------------------
 A_dof    = nu+U_dof;
+ulb1     =  Uh(Xl);
+urb2     =  Uh(Xr);
+dlb1     = dUh(Xl);
+drb2     = dUh(Xr);
 alb1     = nu+ulb1;
 arb2     = nu+urb2;
 X1       = func_dU  (basis, mesh, intg,        U_dof, flag,             ulb1, urb2,               dUh);

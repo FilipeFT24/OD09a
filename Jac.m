@@ -107,7 +107,7 @@ if flag
     %----------------------------------------------------------------------
 end
 %--------------------------------------------------------------------------
-X_dAdUjac = func_dAdUjac(basis, mesh, intg, A_dof, U_dof, flag, alb1, arb2, ulb1, urb2, dlb1, drb2);
+X_dAdUjac = func_dAdUjac(basis, mesh, intg, A_dof, U_dof, alb1, arb2, ulb1, urb2, dlb1, drb2);
 val       = val-X_dAdUjac.lhs;
 rhs       = rhs-X_dAdUjac.rhs;
 g.MAT     = Mat(val);

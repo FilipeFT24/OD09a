@@ -14,7 +14,7 @@ drb2     = dUh(Xr);
 alb1     = nu+ulb1;
 arb2     = nu+urb2;
 X1       = func_dU  (basis, mesh, intg,        U_dof, flag,             ulb1, urb2,               dUh);
-dAdU_dof = func_dAdU(basis, mesh, intg, A_dof, U_dof, flag, alb1, arb2, ulb1, urb2, dlb1, drb2, dAdUh);
+dAdU_dof = func_dAdU(basis, mesh, intg, A_dof, U_dof,       alb1, arb2, ulb1, urb2, dlb1, drb2, dAdUh);
 %--------------------------------------------------------------------------
 dU_dof   = X1.dU_doft;
 F_dof    = intg.F_dof;

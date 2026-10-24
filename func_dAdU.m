@@ -1,4 +1,4 @@
-function [dAdU_doft] = func_dAdU(basis, mesh, intg, A_dof, U_dof, flag, alb1, arb2, ulb1, urb2, dlb1, drb2, funch) %#ok<INUSD>
+function [dAdU_doft] = func_dAdU(basis, mesh, intg, A_dof, U_dof, alb1, arb2, ulb1, urb2, dlb1, drb2, funch) %#ok<INUSD>
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % CELL:
 %--------------------------------------------------------------------------
@@ -81,23 +81,15 @@ p_b2        = plb2+prb2;
 ap_b1       = arb1.*p_b1;
 ap_b2       = alb2.*p_b2;
 %--------------------------------------------------------------------------
-dAdU_doflib = zeros(Km1, N);
-dAdU_dofrib = zeros(Km1, N);
-if flag
-    dAdU_doflib = 1./2.*bDl_M(1:Km1, :).*al_i.*(ul_i-ur_i);
-    dAdU_dofrib = 1./2.*bDr_M(2:K  , :).*ar_i.*(ur_i-ul_i);
-end
+dAdU_doflib = 1./2.*bDl_M(1:Km1, :).*al_i.*(ul_i-ur_i);
+dAdU_dofrib = 1./2.*bDr_M(2:K  , :).*ar_i.*(ur_i-ul_i);
 dAdU_doflia = bfl_M(1:Km1, :).*aduo2_i;
 dAdU_dofria = bfr_M(2:K  , :).*aduo2_i;
 dAdU_doflic = bfl_M(1:Km1, :).*ap_o2_i;
 dAdU_dofric = bfr_M(2:K  , :).*ap_o2_i;
 %--------------------------------------------------------------------------
-dAdU_dofb1b = zeros(1, N);
-dAdU_dofb2b = zeros(1, N);
-if flag
-    dAdU_dofb1b = bDrb1_M.*arb1.*(urb1-ulb1);
-    dAdU_dofb2b = bDlb2_M.*alb2.*(ulb2-urb2);
-end
+dAdU_dofb1b = bDrb1_M.*arb1.*(urb1-ulb1);
+dAdU_dofb2b = bDlb2_M.*alb2.*(ulb2-urb2);
 dAdU_dofb1a = bfrb1_M.*aduo2b1;
 dAdU_dofb2a = bflb2_M.*aduo2b2;
 dAdU_dofb1c = bfrb1_M.*ap_b1;

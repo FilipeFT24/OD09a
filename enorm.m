@@ -13,10 +13,13 @@ Daq    = dUh(Xq);
 Uaq    =  Uh(Xq);
 e_q1   = Udq-Uaq;
 e_q2   = Ddq-Daq;
-e2c1   = e_q1.^2*W_.*det(:, 1);
-e2c2   = e_q2.^2*W_.*det(:, 1);
-l2     = sqrt(sum(e2c1, 1));
-h1     = sqrt(sum(e2c1+e2c2, 1));
+e2q1   = e_q1.^2;
+e2q2   = e_q2.^2;
+e2q1p2 = e2q1+e2q2;
+e2c1   = e2q1  *W_.*det;
+e2c1p2 = e2q1p2*W_.*det;
+l2     = sqrt(sum(e2c1  , 1));
+h1     = sqrt(sum(e2c1p2, 1));
 %--------------------------------------------------------------------------
 e_qabs = abs(e_q1);
 e_c    = e_qabs*Wbf_m;

@@ -1,4 +1,4 @@
-function [X] = func_dAdUjac(basis, mesh, intg, A_dof, U_dof, flag, alb1, arb2, ulb1, urb2, dlb1, drb2)
+function [X] = func_dAdUjac(basis, mesh, intg, A_dof, U_dof, alb1, arb2, ulb1, urb2, dlb1, drb2)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % IMPLICIT:
 %--------------------------------------------------------------------------
@@ -74,19 +74,11 @@ J2cLll_it    = zeros(N, N, Km1);
 J2cLlr_it    = zeros(N, N, Km1);
 J2cLrl_it    = zeros(N, N, Km1);
 J2cLrr_it    = zeros(N, N, Km1);
-J2bLrrb1t    = zeros(N, N);
-J2bLllb2t    = zeros(N, N);
-if flag
-    for i = 1:Km1
-        J2bLll_it(:, :, i) = bfl_*(1./2.*bDl(i  , :).*(al_i(i, 1)+(ul_i(i, 1)-ur_i(i, 1)))); % (transpose): {adv}[u]+dv[u]
-        J2bLlr_it(:, :, i) =-bfr_*(1./2.*bDl(i  , :).*(al_i(i, 1)));                         % =
-        J2bLrl_it(:, :, i) = bfl_*(1./2.*bDr(i+1, :).*(ar_i(i, 1)));                         % =
-        J2bLrr_it(:, :, i) =-bfr_*(1./2.*bDr(i+1, :).*(ar_i(i, 1)+(ur_i(i, 1)-ul_i(i, 1)))); % =
-    end
-    J2bLrrb1t =-bfr_*(bDr(1, :).*(arb1+(urb1-ulb1))); % =
-    J2bLllb2t = bfl_*(bDl(K, :).*(alb2+(ulb2-urb2))); % =
-end
 for i = 1:Km1
+    J2bLll_it(:, :, i) = bfl_*(1./2.*bDl(i  , :).*(al_i(i, 1)+(ul_i(i, 1)-ur_i(i, 1)))); % (transpose): {adv}[u]+dv[u]
+    J2bLlr_it(:, :, i) =-bfr_*(1./2.*bDl(i  , :).*(al_i(i, 1)));                         % =
+    J2bLrl_it(:, :, i) = bfl_*(1./2.*bDr(i+1, :).*(ar_i(i, 1)));                         % =
+    J2bLrr_it(:, :, i) =-bfr_*(1./2.*bDr(i+1, :).*(ar_i(i, 1)+(ur_i(i, 1)-ul_i(i, 1)))); % =
     J2aLll_it(:, :, i) = (dl_i(i, 1).*bfl_+al_i(i, 1).*bDl_(:, i  ))./2*bfl; % (transpose): [v]{dau+adu}
     J2aLlr_it(:, :, i) = (dr_i(i, 1).*bfr_+ar_i(i, 1).*bDr_(:, i+1))./2*bfl; % =
     J2aLrl_it(:, :, i) =-(dl_i(i, 1).*bfl_+al_i(i, 1).*bDl_(:, i  ))./2*bfr; % =
@@ -96,6 +88,8 @@ for i = 1:Km1
     J2cLrl_it(:, :, i) =-(bflLll_i_Mt(:, i).*(ul_i(i, 1)-ur_i(i, 1)+al_i(i, 1))+ar_i(i, 1).*bfrLrl_i_Mt(:, i))./2*bfr; % =
     J2cLrr_it(:, :, i) =-(bfrLrr_i_Mt(:, i).*(ur_i(i, 1)-ul_i(i, 1)+ar_i(i, 1))+al_i(i, 1).*bflLlr_i_Mt(:, i))./2*bfr; % =
 end
+J2bLrrb1t    =-bfr_*(bDr(1, :).*(arb1+(urb1-ulb1))); % =
+J2bLllb2t    = bfl_*(bDl(K, :).*(alb2+(ulb2-urb2))); % =
 J2aLrrb1t    =-(drb1.*bfr_+arb1.*bDr_(:, 1))./2*bfr; % (transpose)
 J2aLllb2t    = (dlb2.*bfl_+alb2.*bDl_(:, K))./2*bfl; % =
 J2cLrrb1t    =-(bfrLrrb1_Mt.*(urb1-ulb1+arb1))*bfr;  % =

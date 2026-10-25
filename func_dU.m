@@ -3,9 +3,11 @@ function [X] = func_dU(basis, mesh, intg, U_dof, flag, ulb1, urb2, dUh) %#ok<INU
 % CELL:
 %--------------------------------------------------------------------------
 det     = mesh.det;
-dc_m    = intg.dc_m;
+bd_     = intg.bd_;
+Wbf_m   = intg.Wbf_m;
 %--------------------------------------------------------------------------
-dU_doft = U_dof*dc_m./det;
+dU      = U_dof*bd_;
+dU_doft = dU*Wbf_m./det;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % FACE:
 %--------------------------------------------------------------------------
@@ -30,7 +32,6 @@ if flag
     ur_i              = U_dof(2:K  , :)*bfr_;
     urb1              = U_dof(1    , :)*bfr_;
     ulb2              = U_dof(  K  , :)*bfl_;
-    
     ujil              = ul_i-ur_i;
     ujir              =-ujil;
     ujb1              = urb1-ulb1;

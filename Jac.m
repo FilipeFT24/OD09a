@@ -81,14 +81,20 @@ if flag
     rhs(K, :)    =-(bfLlrb2t.*urb2)*(-2.*c.*dU_t(:, K).*Wbf);
     %----------------------------------------------------------------------
     %{
-    aux          = zeros(TNN);
+    aux          = zeros(TNN, 1);
     aux(IJdl, 1) = aux(IJdl, 1)-VAL1dil_NN_1;
     aux(IJol, 1) =-VAL1oil_NN_1;
     aux(IJor, 1) =-VAL1oir_NN_1;
     aux(IJdr, 1) = aux(IJdr, 1)-VAL1dir_NN_1;
     aux(IJb1, 1) = aux(IJb1, 1)-VAL1db1_NN_1;
     aux(IJb2, 1) = aux(IJb2, 1)-VAL1db2_NN_1;
+    %{
     AUX          = Mat(aux);
+    %}
+    XT_i         = g.XT_i;
+    XT_j         = g.XT_j;
+    KN           = g.KN;
+    AUX          = sparse(XT_i, XT_j, aux, KN, KN);
     B_doft       = U_dof.';
     B1doft       = B_doft(:);
     X1doft       = AUX*B1doft;
@@ -102,10 +108,6 @@ end
 X_dAdUjac = func_dAdUjac(g, A_dof, U_dof);
 val       = val-X_dAdUjac.lhs;
 rhs       = rhs-X_dAdUjac.rhs;
-%{
-Mat       = g.Jac;
-jac.MAT   = Mat(val);
-%}
 XT_i      = g.XT_i;
 XT_j      = g.XT_j;
 KN        = g.KN;

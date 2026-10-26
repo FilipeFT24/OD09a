@@ -122,18 +122,12 @@ val(IJb1, 1) = val(IJb1, 1)+VAL2db1_NN_1;
 val(IJb2, 1) = val(IJb2, 1)+VAL2db2_NN_1;
 %--------------------------------------------------------------------------
 rhs          = zeros(K, N);
-alb1         = g.alb1;
-arb2         = g.arb2;
-dlb1         = g.dlb1;
-drb2         = g.drb2;
 plb1         = ulb1.*bfrLrlb1_Mt;
 prb2         = urb2.*bflLlrb2_Mt;
-rhs1b1       =-(bfr.*(alb1.*dlb1)./2-bDr(1, :).*arb1.*ulb1-bfr.*(arb1.*plb1).*eta); % <-o
-rhs1b2       = (bfl.*(arb2.*drb2)./2-bDl(K, :).*alb2.*urb2-bfl.*(alb2.*prb2).*eta); % o->
-rhs2b1       =-(bfr.*(dlb1.*ulb1)./2); % <-o
-rhs2b2       = (bfl.*(drb2.*urb2)./2); % o->
-rhs(1, :)    = rhs1b1+rhs2b1;
-rhs(K, :)    = rhs1b2+rhs2b2;
+rhs1b1       =-(-bDr(1, :).*arb1.*ulb1+bfr.*(arb1.*plb1).*eta); % <-o
+rhs1b2       = (-bDl(K, :).*alb2.*urb2+bfl.*(alb2.*prb2).*eta); % o->
+rhs(1, :)    = rhs1b1;
+rhs(K, :)    = rhs1b2;
 X.lhs        = val;
 X.rhs        = rhs;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -190,10 +184,16 @@ dub1         = urb1-ulb1;
 dub2         = ulb2-urb2;
 ap_b1        = (arb1.*p_b1+dub1.*prb1);
 ap_b2        = (alb2.*p_b2+dub2.*plb2);
-aduo2b1      = (arb1.*drb1+alb1.*dlb1)./2;
+%{
+aduo2b1      = (arb1.*drb1+alb1.*dlb1)./2; % THIS IS NOT A DIRICHLET CONDITION FOR THE JACOBIAN OF THE TERM [v]{adu}!
 aduo2b2      = (alb2.*dlb2+arb2.*drb2)./2;
 duuo2b1      = (drb1.*urb1+dlb1.*ulb1)./2;
 duuo2b2      = (dlb2.*ulb2+drb2.*urb2)./2;
+%}
+aduo2b1      = arb1.*drb1;                 % BUT THIS IS!
+aduo2b2      = alb2.*dlb2;
+duuo2b1      = drb1.*urb1;
+duuo2b2      = dlb2.*ulb2;
 dAdU_dofb1a  = bfrb1_M.*(aduo2b1+duuo2b1);
 dAdU_dofb2a  = bflb2_M.*(aduo2b2+duuo2b2);
 dAdU_dofb1b  = bDrb1_M.*(arb1+urb1).*(urb1-ulb1);
@@ -205,12 +205,12 @@ A                      = A_dof*bf_; % nu+U
 dU                     = U_dof*bd_;
 AdU                    = A.*dU;
 dAdU_doffjac           =-AdU*Wbd_m./det.^2;
-dAdU_doffjac(1:Km1, :) = dAdU_doffjac(1:Km1, :)+(dAdU_doflia+dAdU_doflib-dAdU_doflic.*eta); % o-> (con+sym+pen) pen term is [v]{ar([u])}, where r([u]) = -{v}[u]) => minus sign
-dAdU_doffjac(2:K  , :) = dAdU_doffjac(2:K  , :)-(dAdU_dofria+dAdU_dofrib-dAdU_dofric.*eta); % <-o (con+sym+pen)
-dAdU_doffjac(1    , :) = dAdU_doffjac(1    , :)-(dAdU_dofb1a+dAdU_dofb1b-dAdU_dofb1c.*eta); % =
-dAdU_doffjac(  K  , :) = dAdU_doffjac(  K  , :)+(dAdU_dofb2a+dAdU_dofb2b-dAdU_dofb2c.*eta); % =
+dAdU_doffjac(1:Km1, :) = dAdU_doffjac(1:Km1, :)+(dAdU_doflia+dAdU_doflib+dAdU_doflic.*eta); % o-> (con+sym+pen) pen term is [v]{ar([u])}, where r([u]) = -{v}[u]) => minus sign
+dAdU_doffjac(2:K  , :) = dAdU_doffjac(2:K  , :)-(dAdU_dofria+dAdU_dofrib+dAdU_dofric.*eta); % <-o (con+sym+pen)
+dAdU_doffjac(1    , :) = dAdU_doffjac(1    , :)-(dAdU_dofb1a+dAdU_dofb1b+dAdU_dofb1c.*eta); % =
+dAdU_doffjac(  K  , :) = dAdU_doffjac(  K  , :)+(dAdU_dofb2a+dAdU_dofb2b+dAdU_dofb2c.*eta); % =
 %--------------------------------------------------------------------------
-aux          = zeros(TNN);
+aux          = zeros(TNN, 1);
 aux(IJd_, 1) = VAL2_NN_K_1;
 aux(IJdl, 1) = aux(IJdl, 1)+VAL2dil_NN_1;
 aux(IJol, 1) = VAL2oil_NN_1;
@@ -218,8 +218,14 @@ aux(IJor, 1) = VAL2oir_NN_1;
 aux(IJdr, 1) = aux(IJdr, 1)+VAL2dir_NN_1;
 aux(IJb1, 1) = aux(IJb1, 1)+VAL2db1_NN_1;
 aux(IJb2, 1) = aux(IJb2, 1)+VAL2db2_NN_1;
+%{
 Mat          = g.Jaux;
 AUX          = Mat(aux);
+%}
+XT_i         = g.XT_i;
+XT_j         = g.XT_j;
+KN           = g.KN;
+AUX          = sparse(XT_i, XT_j, aux, KN, KN);
 B_doft       = U_dof.';
 B1doft       = B_doft(:);
 X1doft       = AUX*B1doft;
@@ -228,6 +234,15 @@ X1dofE       = dAdU_doffjac;
 mass         = g.mass;
 X1dofE       = X1dofE*mass.*det;
 diff_2       = X1dofI-X1dofE; max(abs(diff_2), [], 'all')
+dAdU_fjac    = dAdU_doffjac*bf_;
+Wbf          = g.Wbf;
+src          = dAdU_fjac*Wbf.*det-rhs;
+%            = dAdU_doffjac*mass.*det-rhs;
+srct         = src.';
+srct1        = srct(:);
+x1dof        = AUX\srct1;
+x_dof        = reshape(x1dof, [], K).';
+diff_3       = x_dof-U_dof; max(abs(diff_3), [], 'all')
 %}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 end

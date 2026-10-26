@@ -26,4 +26,4 @@ This case is reproduced here (in this repository) using the BR2 method **with** 
 
 **NOTE 2):** The construction of the spatial operators follows a similar strategy to that employed in the uhainafil-toy1d repository: https://github.com/FilipeFT24/uhainafil-toy1d **(currently private)**.
 
-**NOTE 3):** WORK IN PROGRESS
+**NOTE 3):** There seems to be a bug for the adjoint problem with non-homogeneous boundary conditions! (problem for another day)

@@ -7,11 +7,11 @@ for i = 1:size(fc, 1)
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 color        = linspecer(9, 'Qualitative');
-flag         = [1, 1];
+flag         = [1, 0];
 nh           = size(l2{1, 1}, 1);
 np           = size(l2{1, 1}, 2);
 kh           = nh;
-fid2         = ["NonlinearElliptic (l2norm - without lift).pdf", "NonlinearElliptic (l2norm - with lift).pdf"];
+fid2         = ["Figures/NonlinearElliptic (l2norm - without lift).pdf", "Figures/NonlinearElliptic (l2norm - with lift).pdf"];
 %--------------------------------------------------------------------------
 xlim1        = [Xl, Xr];
 xlim2        = [0, 4];
@@ -86,11 +86,8 @@ if flag(1, 1)
     end
     %}
     %----------------------------------------------------------------------
-    if ~export
-        figure('Color', 'w', 'Windowstate', 'maximized', 'Renderer', 'painters');
-    else
-        figure('Color', 'w', 'Windowstate', 'maximized', 'Renderer', 'painters', 'MenuBar', 'none', 'Toolbar', 'none');
-    end
+    %{
+    figure('Color', 'w', 'Windowstate', 'maximized', 'Renderer', 'painters');
     hold on;
     for i = 1:np
         plot(X2, Y2{1, 1}(:, i), '-', 'Color', color(i, :), 'LineWidth', 4);
@@ -107,14 +104,10 @@ if flag(1, 1)
         layer, ...
         xtitle1, ...
         ytitle1, ...
-        [], [], [], [])
+        [], [], [], []);
+    %}
     %----------------------------------------------------------------------
-    if ~export
-        figure('Color', 'w', 'Windowstate', 'maximized', 'Renderer', 'painters');
-    else
-        figure('Color', 'w', 'Windowstate', 'maximized', 'Renderer', 'painters', 'MenuBar', 'none', 'Toolbar', 'none');
-    end
-    hold on;
+    figure('Color', 'w', 'Windowstate', 'maximized', 'Renderer', 'painters');
     hold on;
     for i = 1:np
         plot(X2, Y2a{1, 1}(:, i), '-', 'Color', color(i, :), 'LineWidth', 4);
@@ -131,7 +124,7 @@ if flag(1, 1)
         layer, ...
         xtitle1, ...
         ytitle1, ...
-        [], [], [], [])
+        [], [], [], []);
     %----------------------------------------------------------------------
 end
 if flag(1, 2)

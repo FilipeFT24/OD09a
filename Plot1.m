@@ -7,12 +7,11 @@ for i = 1:size(fc, 1)
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 color        = linspecer(9, 'Qualitative');
-flag         = [0, 1];
+flag         = [1, 1];
 nh           = size(l2{1, 1}, 1);
 np           = size(l2{1, 1}, 2);
 kh           = nh;
-fid1         = ["Toy (1.1).pdf", "Toy (1.2).pdf"];
-fid2         = ["Toy (2.1)-N.pdf", "Toy (2.2)-N.pdf", "Toy (2.3)-N.pdf", "Toy (2.4)-N.pdf", "Toy (2.1)-Y.pdf", "Toy (2.2)-Y.pdf", "Toy (2.3)-Y.pdf", "Toy (2.4)-Y.pdf"];
+fid2         = ["NonlinearElliptic (l2norm - without lift).pdf", "NonlinearElliptic (l2norm - with lift).pdf"];
 %--------------------------------------------------------------------------
 xlim1        = [Xl, Xr];
 xlim2        = [0, 4];
@@ -88,9 +87,9 @@ if flag(1, 1)
     %}
     %----------------------------------------------------------------------
     if ~export
-        f11 = figure('Color', 'w', 'Windowstate', 'maximized', 'Renderer', 'painters');
+        figure('Color', 'w', 'Windowstate', 'maximized', 'Renderer', 'painters');
     else
-        f11 = figure('Color', 'w', 'Windowstate', 'maximized', 'Renderer', 'painters', 'MenuBar', 'none', 'Toolbar', 'none');
+        figure('Color', 'w', 'Windowstate', 'maximized', 'Renderer', 'painters', 'MenuBar', 'none', 'Toolbar', 'none');
     end
     hold on;
     for i = 1:np
@@ -108,16 +107,12 @@ if flag(1, 1)
         layer, ...
         xtitle1, ...
         ytitle1, ...
-        [], ...
-        [], [], [])
-    if export
-        set(f11, 'Units', 'inches', 'PaperSize', 19*[1, 0.935], 'PaperPosition', 20*[0, 0, 1, 0.935]); print(f11, fid1(1, 1), '-dpdf', '-r600');
-    end
+        [], [], [], [])
     %----------------------------------------------------------------------
     if ~export
-        f12 = figure('Color', 'w', 'Windowstate', 'maximized', 'Renderer', 'painters');
+        figure('Color', 'w', 'Windowstate', 'maximized', 'Renderer', 'painters');
     else
-        f12 = figure('Color', 'w', 'Windowstate', 'maximized', 'Renderer', 'painters', 'MenuBar', 'none', 'Toolbar', 'none');
+        figure('Color', 'w', 'Windowstate', 'maximized', 'Renderer', 'painters', 'MenuBar', 'none', 'Toolbar', 'none');
     end
     hold on;
     hold on;
@@ -136,11 +131,7 @@ if flag(1, 1)
         layer, ...
         xtitle1, ...
         ytitle1, ...
-        [], ...
-        [], [], [])
-    if export
-        set(f12, 'Units', 'inches', 'PaperSize', 19*[1, 0.935], 'PaperPosition', 20*[0, 0, 1, 0.935]); print(f12, fid1(1, 2), '-dpdf', '-r600');
-    end
+        [], [], [], [])
     %----------------------------------------------------------------------
 end
 if flag(1, 2)

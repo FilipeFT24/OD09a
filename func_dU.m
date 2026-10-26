@@ -27,7 +27,6 @@ if flag
     bfr_i_M           = bfr_M(2:K  , :);
     bfrb1_M           = bfr_M(1, :);
     bflb2_M           = bfl_M(K, :);
-    %----------------------------------------------------------------------
     ul_i              = U_dof(1:Km1, :)*bfl_;
     ur_i              = U_dof(2:K  , :)*bfr_;
     urb1              = U_dof(1    , :)*bfr_;
@@ -49,83 +48,88 @@ if flag
     dU_doft           = ...
         dU_doft-dU_doff;
     %----------------------------------------------------------------------
+    %{
+    ffll_m        = g.ffll_m;
+    fflr_m        = g.fflr_m;
+    ffrl_m        = g.ffrl_m;
+    ffrr_m        = g.ffrr_m;
+    ffll_mt       = ffll_m.';
+    fflr_mt       = fflr_m.';
+    ffrl_mt       = ffrl_m.';
+    ffrr_mt       = ffrr_m.';
+    Km1           = K-1;
+    U_dofli       = U_dof(1:Km1, :);
+    U_dofri       = U_dof(2:K  , :);
+    detli         = det  (1:Km1, 1);
+    detri         = det  (2:K  , 1);
+    dU_dofliI     = 1./2.*(U_dofli*ffll_mt-U_dofri*fflr_mt)./detli;
+    dU_dofriI     =-1./2.*(U_dofri*ffrr_mt-U_dofli*ffrl_mt)./detri;
+    dU_dofb1I     =-U_dof(1, :)*ffrr_mt./det(1, 1)+bfrb1_M.*ulb1; % i-e w/ - <-o
+    dU_dofb2I     = U_dof(K, :)*ffll_mt./det(K, 1)-bflb2_M.*urb2; % =   w/ + o->
+    diffl1        = dU_dofli-dU_dofliI; max(abs(diffl1), [], 'all')
+    diffr1        = dU_dofri-dU_dofriI; max(abs(diffr1), [], 'all')
+    diffl2        = dU_dofb1-dU_dofb1I; max(abs(diffl2), [], 'all')
+    diffr2        = dU_dofb2-dU_dofb2I; max(abs(diffr2), [], 'all')
+    %----------------------------------------------------------------------
+    NN            = N*N;
+    TNN           = g.TNN;
+    IJdl          = g.IJdl; % ll
+    IJol          = g.IJol; % lr
+    IJor          = g.IJor; % rl
+    IJdr          = g.IJdr; % rr
+    IJb1          = g.IJb1; % rrb1
+    IJb2          = g.IJb2; % llb2
+    Lll_it        = zeros(N, N, Km1);
+    Llr_it        = zeros(N, N, Km1);
+    Lrl_it        = zeros(N, N, Km1);
+    Lrr_it        = zeros(N, N, Km1);
+    RHSL          = zeros(K, N);
+    for i = 1:Km1
+        Lll_it(:, :, i) = 1./2.*ffll_mt./det(i  , 1); % +      o->
+        Llr_it(:, :, i) =-1./2.*fflr_mt./det(i  , 1); % -      o->
+        Lrl_it(:, :, i) = 1./2.*ffrl_mt./det(i+1, 1); % + = -- <-o
+        Lrr_it(:, :, i) =-1./2.*ffrr_mt./det(i+1, 1); % -      <-o
+    end
+    Lrrb1t        =-ffrr_mt./det(1, 1); % - <-o
+    Lllb2t        = ffll_mt./det(K, 1); % + o->
+    VALL          = zeros(TNN, 1);
+    Lll_it_res    = reshape(Lll_it, [NN, Km1]);
+    Llr_it_res    = reshape(Llr_it, [NN, Km1]);
+    Lrl_it_res    = reshape(Lrl_it, [NN, Km1]);
+    Lrr_it_res    = reshape(Lrr_it, [NN, Km1]);
+    VALLdil_NN_1  = Lll_it_res(:);
+    VALLoil_NN_1  = Llr_it_res(:);
+    VALLoir_NN_1  = Lrl_it_res(:);
+    VALLdir_NN_1  = Lrr_it_res(:);
+    VALLdb1_NN_1  = Lrrb1t    (:);
+    VALLdb2_NN_1  = Lllb2t    (:);
+    VALL(IJdl, 1) = VALL(IJdl, 1)+VALLdil_NN_1;
+    VALL(IJol, 1) = VALLoil_NN_1;
+    VALL(IJor, 1) = VALLoir_NN_1;
+    VALL(IJdr, 1) = VALL(IJdr, 1)+VALLdir_NN_1;
+    VALL(IJb1, 1) = VALL(IJb1, 1)+VALLdb1_NN_1;
+    VALL(IJb2, 1) = VALL(IJb2, 1)+VALLdb2_NN_1;
+    %{
+    JAUX          = g.Jaux; % aux. matrix (for debugging)
+    MATL          = JAUX(VALL);
+    %}
+    XT_i          = g.XT_i;
+    XT_j          = g.XT_j;
+    KN            = g.KN;
+    MATL          = sparse(XT_i, XT_j, VALL, KN, KN);
+    RHSL(1, :)    = bfrb1_M.*ulb1; % + = -- <-o
+    RHSL(K, :)    =-bflb2_M.*urb2; % -      o->
+    U_doft        = U_dof.';
+    U             = U_doft(:);
+    lift1I_1      = MATL*U;
+    lift1I        = reshape(lift1I_1, [], K).'+RHSL;
+    diff_3        = dU_doff-lift1I; max(abs(diff_3), [], 'all')
+    %}
+    %----------------------------------------------------------------------
 end
 %--------------------------------------------------------------------------
 X.dU_doff = dU_doff; % lift (for debugging)
 X.dU_doft = dU_doft;
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% CHECK #1:
-%--------------------------------------------------------------------------
-%{
-ffll_m        = g.ffll_m;
-fflr_m        = g.fflr_m;
-ffrl_m        = g.ffrl_m;
-ffrr_m        = g.ffrr_m;
-ffll_mt       = ffll_m.';
-fflr_mt       = fflr_m.';
-ffrl_mt       = ffrl_m.';
-ffrr_mt       = ffrr_m.';
-U_dofli       = U_dof(1:Km1, :);
-U_dofri       = U_dof(2:K  , :);
-detli         = det  (1:Km1, 1);
-detri         = det  (2:K  , 1);
-dU_dofliI     = 1./2.*(U_dofli*ffll_mt-U_dofri*fflr_mt)./detli;
-dU_dofriI     =-1./2.*(U_dofri*ffrr_mt-U_dofli*ffrl_mt)./detri;
-dU_dofb1I     =-U_dof(1, :)*ffrr_mt./det(1, 1)+bfrb1_M.*ulb1; % i-e w/ - <-o
-dU_dofb2I     = U_dof(K, :)*ffll_mt./det(K, 1)-bflb2_M.*urb2; % =   w/ + o->
-diffl1        = dU_dofli-dU_dofliI; max(abs(diffl1), [], 'all')
-diffr1        = dU_dofri-dU_dofriI; max(abs(diffr1), [], 'all')
-diffl2        = dU_dofb1-dU_dofb1I; max(abs(diffl2), [], 'all')
-diffr2        = dU_dofb2-dU_dofb2I; max(abs(diffr2), [], 'all')
-%--------------------------------------------------------------------------
-NN            = N*N;
-TNN           = g.TNN;
-IJdl          = g.IJdl; % ll
-IJol          = g.IJol; % lr
-IJor          = g.IJor; % rl
-IJdr          = g.IJdr; % rr
-IJb1          = g.IJb1; % rrb1
-IJb2          = g.IJb2; % llb2
-JAUX          = g.Jaux; % aux. matrix (for debugging)
-Lll_it        = zeros(N, N, Km1);
-Llr_it        = zeros(N, N, Km1);
-Lrl_it        = zeros(N, N, Km1);
-Lrr_it        = zeros(N, N, Km1);
-RHSL          = zeros(K, N);
-for i = 1:Km1
-    Lll_it(:, :, i) = 1./2.*ffll_mt./det(i  , 1); % +      o->
-    Llr_it(:, :, i) =-1./2.*fflr_mt./det(i  , 1); % -      o->
-    Lrl_it(:, :, i) = 1./2.*ffrl_mt./det(i+1, 1); % + = -- <-o
-    Lrr_it(:, :, i) =-1./2.*ffrr_mt./det(i+1, 1); % -      <-o
-end
-Lrrb1t        =-ffrr_mt./det(1, 1); % - <-o
-Lllb2t        = ffll_mt./det(K, 1); % + o->
-VALL          = zeros(TNN, 1);
-Lll_it_res    = reshape(Lll_it, [NN, Km1]);
-Llr_it_res    = reshape(Llr_it, [NN, Km1]);
-Lrl_it_res    = reshape(Lrl_it, [NN, Km1]);
-Lrr_it_res    = reshape(Lrr_it, [NN, Km1]);
-VALLdil_NN_1  = Lll_it_res(:);
-VALLoil_NN_1  = Llr_it_res(:);
-VALLoir_NN_1  = Lrl_it_res(:);
-VALLdir_NN_1  = Lrr_it_res(:);
-VALLdb1_NN_1  = Lrrb1t    (:);
-VALLdb2_NN_1  = Lllb2t    (:);
-VALL(IJdl, 1) = VALL(IJdl, 1)+VALLdil_NN_1;
-VALL(IJol, 1) = VALLoil_NN_1;
-VALL(IJor, 1) = VALLoir_NN_1;
-VALL(IJdr, 1) = VALL(IJdr, 1)+VALLdir_NN_1;
-VALL(IJb1, 1) = VALL(IJb1, 1)+VALLdb1_NN_1;
-VALL(IJb2, 1) = VALL(IJb2, 1)+VALLdb2_NN_1;
-MATL          = JAUX(VALL);
-RHSL(1, :)    = bfrb1_M.*ulb1; % + = -- <-o
-RHSL(K, :)    =-bflb2_M.*urb2; % -      o->
-U_doft        = U_dof.';
-U             = U_doft(:);
-lift1I_1      = MATL*U;
-lift1I        = reshape(lift1I_1, [], K).'+RHSL;
-diff_3        = dU_doff-lift1I; max(abs(diff_3), [], 'all')
-%}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % CHECK #2:
 %--------------------------------------------------------------------------

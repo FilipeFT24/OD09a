@@ -18,7 +18,8 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % DATA:
 %--------------------------------------------------------------------------
-K     = 2.^(2:6);
+%     = 4*2.^(0:4);
+K     = 4*2.^(1:5);
 p     = [1, 2, 3, 4];
 tol   = 100*eps;
 Xl    = 0;
@@ -49,8 +50,8 @@ l2    = cell(1, 2);  % primal  error in the        l2-norm
 h1    = cell(1, 2);  % primal  error in the broken h1-norm
 l2a   = cell(1, 2);  % adjoint error in the        l2-norm
 h1a   = cell(1, 2);  % adjoint error in the broken h1-norm
-bfunc = cell(1, np);
-vfunc = cell(1, np);
+FUNC  = cell(1, np);
+VISU  = cell(1, np);
 for i = 1:2
     for j = 1:nh
         for k = 1:np
@@ -69,10 +70,10 @@ for i = 1:2
             N     = aux.N;
             U_dof = zeros(K(1, j), N);
             delta = realmax;
-
-            bfunc{1, k} = aux.fh;
-            vfunc{1, k} = aux.visu;
-
+            if j == 1
+                FUNC{1, k} = aux.fh;
+                VISU{1, k} = aux.visu;
+            end
             %--------------------------------------------------------------
             while delta > tol
                 g1     = Res(aux, flag, nu, c, U_dof, dUh, dAdUh);
@@ -158,6 +159,5 @@ for k = 1:np
     end
     fprintf("---------------   ---------------------------    ---------------   ---------------------------\n");
 end
-
-%Plot1(Xl, Xr, Fd, l2, bfunc, vfunc, 0, "Toy (1).pdf");
+Plot1(Xl, Xr, Fd, Fda, h, l2, l2a, h1, h1a, FUNC, VISU, 0);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -11,7 +11,6 @@ bd_          = g.bd_;
 DFr          = g.DFr;
 FDr          = g.FDr;
 IJd_         = g.IJd_;
-Mat          = g.Jac;
 NN           = N*N;
 val          = zeros(TNN, 1);
 rhs          = zeros(K, N);
@@ -103,7 +102,14 @@ end
 X_dAdUjac = func_dAdUjac(g, A_dof, U_dof);
 val       = val-X_dAdUjac.lhs;
 rhs       = rhs-X_dAdUjac.rhs;
+%{
+Mat       = g.Jac;
 jac.MAT   = Mat(val);
+%}
+XT_i      = g.XT_i;
+XT_j      = g.XT_j;
+KN        = g.KN;
+jac.MAT   = sparse(XT_i, XT_j, val, KN, KN);
 jac.R_dof = rhs;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 end

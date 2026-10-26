@@ -105,6 +105,7 @@ IJb2   = IJd_(Km1NN+(1:NN)   , 1);
 %--------------------------------------------------------------------------
 g.K    = K;
 g.det  = det;
+g.KN   = KN;
 g.TNN  = TNN;
 g.IJd_ = IJd_; % cell
 g.IJdl = IJdl; % fint ll
@@ -113,8 +114,14 @@ g.IJol = IJol; % face lr
 g.IJor = IJor; % face rl
 g.IJb1 = IJb1; % bnd1
 g.IJb2 = IJb2; % bnd2
+%{
 g.Jaux = spinit(XT_i, XT_j, [KN, KN]);
 g.Jac  = spinit(XT_i, XT_j, [KN, KN]);
+%}
+g.XT_i = XT_i;
+g.XT_j = XT_j;
+g.Jaux = sparse(XT_i, XT_j, zeros(TNN, 1), KN, KN);
+g.Jac  = sparse(XT_i, XT_j, zeros(TNN, 1), KN, KN);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % CELL:
 %--------------------------------------------------------------------------
@@ -294,12 +301,10 @@ end
 g.DFr      = DFr;
 g.FDr      = FDr;
 %--------------------------------------------------------------------------
-%{
 g.ffll_m   = ffll_m; % DEBUG
-g.fflr_m   = fflr_m;
-g.ffrl_m   = ffrl_m;
-g.ffrr_m   = ffrr_m;
-%}
+g.fflr_m   = fflr_m; % =
+g.ffrl_m   = ffrl_m; % =
+g.ffrr_m   = ffrr_m; % =
 bfffll_m   = bf*ffll_m;
 bffflr_m   = bf*fflr_m;
 bfffrl_m   = bf*ffrl_m;
@@ -334,9 +339,7 @@ for i = 1:K
     end
 end
 g.DDr      = DDr;
-%{
 g.mass     = mass; % DEBUG
-%}
 %--------------------------------------------------------------------------
 FDll_i     = zeros(N, N, Km1);
 FDlr_i     = zeros(N, N, Km1);

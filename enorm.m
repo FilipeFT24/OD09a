@@ -1,11 +1,11 @@
-function [e_c, l2, h1] = enorm(basis, mesh, intg, U_dof, Uh, dUh)
+function [e_c, l2, h1] = enorm(g, U_dof, Uh, dUh)
 %--------------------------------------------------------------------------
-W_     = basis.W_;
-det    = mesh.det;
-Xq     = intg.Xq;
-bd_    = intg.bd_;
-bf_    = intg.bf_;
-Wbf_m  = intg.Wbf_m;
+W_     = g.W_;
+det    = g.det;
+Xq     = g.Xq;
+bd_    = g.bd_;
+bf_    = g.bf_;
+Wbf_m  = g.Wbf_m;
 %--------------------------------------------------------------------------
 Ddq    = U_dof*bd_./det;
 Udq    = U_dof*bf_;

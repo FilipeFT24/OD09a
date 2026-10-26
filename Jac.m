@@ -1,17 +1,17 @@
-function [g] = Jac(basis, mesh, intg, flag, nu, c, U_dof, Uh, dUh, dU, dUf) %#ok<INUSD>
+function [jac] = Jac(g, flag, nu, c, U_dof, dU, dUf) %#ok<INUSD>
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % CELL:
 %--------------------------------------------------------------------------
-N            = basis.N;
-K            = mesh.K;
-det          = mesh.det;
-TNN          = mesh.TNN;
-IJd_         = mesh.IJd_;
-Mat          = mesh.Jac;
-R            = intg.R;
-bd_          = intg.bd_;
-DFr          = intg.DFr;
-FDr          = intg.FDr;
+K            = g.K;
+N            = g.N;
+R            = g.R;
+TNN          = g.TNN;
+det          = g.det;
+bd_          = g.bd_;
+DFr          = g.DFr;
+FDr          = g.FDr;
+IJd_         = g.IJd_;
+Mat          = g.Jac;
 NN           = N*N;
 val          = zeros(TNN, 1);
 rhs          = zeros(K, N);
@@ -29,33 +29,24 @@ val(IJd_, 1) = Jacd_NN_K_1;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % FACE:
 %--------------------------------------------------------------------------
-Xl   = mesh.Xl;
-Xr   = mesh.Xr;
-ulb1 =  Uh(Xl);
-urb2 =  Uh(Xr);
-dlb1 = dUh(Xl);
-drb2 = dUh(Xr);
-alb1 = nu+ulb1;
-arb2 = nu+urb2;
-%--------------------------------------------------------------------------
 if flag
     %----------------------------------------------------------------------
     Km1      = K-1;
-    IJdl     = mesh.IJdl; % ll
-    IJol     = mesh.IJol; % lr
-    IJor     = mesh.IJor; % rl
-    IJdr     = mesh.IJdr; % rr
-    IJb1     = mesh.IJb1; % rrb1
-    IJb2     = mesh.IJb2; % llb2
-    Wbf      = intg.Wbf;
-    bfLll_it = intg.bfLll_it;
-    bfLlr_it = intg.bfLlr_it;
-    bfLrl_it = intg.bfLrl_it;
-    bfLrr_it = intg.bfLrr_it;
-    bfLllb2t = intg.bfLllb2t;
-    bfLlrb2t = intg.bfLlrb2t;
-    bfLrlb1t = intg.bfLrlb1t;
-    bfLrrb1t = intg.bfLrrb1t;
+    IJdl     = g.IJdl; % ll
+    IJol     = g.IJol; % lr
+    IJor     = g.IJor; % rl
+    IJdr     = g.IJdr; % rr
+    IJb1     = g.IJb1; % rrb1
+    IJb2     = g.IJb2; % llb2
+    Wbf      = g.Wbf;
+    bfLll_it = g.bfLll_it;
+    bfLlr_it = g.bfLlr_it;
+    bfLrl_it = g.bfLrl_it;
+    bfLrr_it = g.bfLrr_it;
+    bfLllb2t = g.bfLllb2t;
+    bfLlrb2t = g.bfLlrb2t;
+    bfLrlb1t = g.bfLrlb1t;
+    bfLrrb1t = g.bfLrrb1t;
     %----------------------------------------------------------------------
     J1Lll_it = zeros(N, N, Km1);
     J1Llr_it = zeros(N, N, Km1);
@@ -85,6 +76,8 @@ if flag
     val(IJdr, 1) = val(IJdr, 1)-VAL1dir_NN_1;
     val(IJb1, 1) = val(IJb1, 1)-VAL1db1_NN_1;
     val(IJb2, 1) = val(IJb2, 1)-VAL1db2_NN_1;
+    ulb1         = g.ulb1;
+    urb2         = g.urb2;
     rhs(1, :)    =-(bfLrlb1t.*ulb1)*(-2.*c.*dU_t(:, 1).*Wbf);
     rhs(K, :)    =-(bfLlrb2t.*urb2)*(-2.*c.*dU_t(:, K).*Wbf);
     %----------------------------------------------------------------------
@@ -107,10 +100,10 @@ if flag
     %----------------------------------------------------------------------
 end
 %--------------------------------------------------------------------------
-X_dAdUjac = func_dAdUjac(basis, mesh, intg, A_dof, U_dof, alb1, arb2, ulb1, urb2, dlb1, drb2);
+X_dAdUjac = func_dAdUjac(g, A_dof, U_dof);
 val       = val-X_dAdUjac.lhs;
 rhs       = rhs-X_dAdUjac.rhs;
-g.MAT     = Mat(val);
-g.R_dof   = rhs;
+jac.MAT   = Mat(val);
+jac.R_dof = rhs;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 end

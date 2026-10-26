@@ -18,7 +18,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % DATA:
 %--------------------------------------------------------------------------
-K     = 2.^(2:3);
+K     = 2.^(2:6);
 p     = [1, 2, 3, 4];
 tol   = 100*eps;
 Xl    = 0;
@@ -32,11 +32,11 @@ arg   = @(x) pi.*x;
 Uh    = @(x) sin(arg(x));
 dUh   = @(x) pi.*cos(arg(x));
 dAdUh = @(x)-pi.^2.*(sin(arg(x)).^2+nu.*sin(arg(x))-cos(arg(x)).^2);
-fh    = @(x) pi.^2.*((nu+sin(pi.*x)).*sin(pi.*x)-(1+c).*cos(pi.*x).^2);
+Fh    = @(x) pi.^2.*((nu+sin(pi.*x)).*sin(pi.*x)-(1+c).*cos(pi.*x).^2);
 %--------------------------------------------------------------------------
 Ph    = @(x) sin(arg(x));
 dPh   = @(x) pi.*cos(arg(x));
-gh    = @(x) pi.^2.*(2.*c.*(cos(arg(x)).^2-sin(arg(x)).^2)+(nu+sin(arg(x))).*sin(arg(x)));
+Gh    = @(x) pi.^2.*(2.*c.*(cos(arg(x)).^2-sin(arg(x)).^2)+(nu+sin(arg(x))).*sin(arg(x)));
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % LOOP:
 %--------------------------------------------------------------------------
@@ -65,23 +65,18 @@ for i = 1:2
         for k = 1:np
             %--------------------------------------------------------------
             Xvt   = Xl:dX/K(1, j):Xr;
-
-
-            basis = f_aux1(p(1, k));
-            mesh  = f_aux2(basis, Xvt);
-            intg  = f_aux3(basis, mesh, fh, gh);
-            N     = basis.N;
+            aux   = func_aux(p(1, k), Xvt, nu, Fh, Gh, Uh, dUh);
+            N     = aux.N;
             U_dof = zeros(K(1, j), N);
             delta = realmax;
 
-            bfunc{1, k} = basis.fh;
-            vfunc{1, k} = intg.visu;
+            bfunc{1, k} = aux.fh;
+            vfunc{1, k} = aux.visu;
 
             %--------------------------------------------------------------
             while delta > tol
-                C_dof  = nu+U_dof;
-                g1     = Res(basis, mesh, intg, flag, nu, c, U_dof, Uh, dUh, dAdUh);
-                g2     = Jac(basis, mesh, intg, flag, nu, c, U_dof, Uh, dUh, g1.dU, g1.dUf); % this "dU" already contains the lifting contribution!
+                g1     = Res(aux, flag, nu, c, U_dof, dUh, dAdUh);
+                g2     = Jac(aux, flag, nu, c, U_dof, g1.dU, g1.dUf); % this "dU" already contains the lifting contribution!
                 R_dof  = g1.R_dof;
                 J_mat  = g2.MAT;
                 B_dof  = R_dof;
@@ -93,18 +88,18 @@ for i = 1:2
                 delta  = norm(X1dof, Inf);
             end
             [Fd{1, i}{j, k}, l2{1, i}(j, k), h1{1, i}(j, k)] = ...
-                enorm(basis, mesh, intg, U_dof, Uh, dUh);
+                enorm(aux, U_dof, Uh, dUh);
             %--------------------------------------------------------------
-            g1     = Res(basis, mesh, intg, flag, nu, c, U_dof, Uh, dUh, dAdUh);
-            g2     = Jac(basis, mesh, intg, flag, nu, c, U_dof, Uh, dUh, g1.dU, g1.dUf);
+            g1     = Res(aux, flag, nu, c, U_dof, dUh, dAdUh);
+            g2     = Jac(aux, flag, nu, c, U_dof, g1.dU, g1.dUf);
             J_mat  = g2.MAT;
-            G_dof  = intg.Gkdof;
+            G_dof  = aux.Gkdof;
             G_doft = G_dof.';
             G1doft = G_doft(:);
             P_doft = J_mat.'\G1doft;
             P_dof  = reshape(P_doft, [], K(1, j)).';
             [Fda{1, i}{j, k}, l2a{1, i}(j, k), h1a{1, i}(j, k)] = ...
-                enorm(basis, mesh, intg, P_dof, Ph, dPh);
+                enorm(aux, P_dof, Ph, dPh);
             %--------------------------------------------------------------
         end
     end

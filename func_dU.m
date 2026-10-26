@@ -1,28 +1,28 @@
-function [X] = func_dU(basis, mesh, intg, U_dof, flag, ulb1, urb2, dUh) %#ok<INUSD> 
+function [X] = func_dU(g, U_dof, flag, dUh) %#ok<INUSD> 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % CELL:
 %--------------------------------------------------------------------------
-det     = mesh.det;
-bd_     = intg.bd_;
-Wbf_m   = intg.Wbf_m;
+det     = g.det;
+bd_     = g.bd_;
+Wbf_m   = g.Wbf_m;
 %--------------------------------------------------------------------------
 dU      = U_dof*bd_;
 dU_doft = dU*Wbf_m./det;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % FACE:
 %--------------------------------------------------------------------------
-N       = basis.N;
-K       = mesh.K;
+K       = g.K;
+N       = g.N;
 dU_doff = zeros(K, N);
 %--------------------------------------------------------------------------
 if flag
     %----------------------------------------------------------------------
     Km1               = K-1;
     dU_doff           = zeros(K, N);
-    bfl_              = intg.bfl_;
-    bfr_              = intg.bfr_;
-    bfl_M             = intg.bfl_M;
-    bfr_M             = intg.bfr_M;
+    bfl_              = g.bfl_;
+    bfr_              = g.bfr_;
+    bfl_M             = g.bfl_M;
+    bfr_M             = g.bfr_M;
     bfl_i_M           = bfl_M(1:Km1, :);
     bfr_i_M           = bfr_M(2:K  , :);
     bfrb1_M           = bfr_M(1, :);
@@ -34,16 +34,18 @@ if flag
     ulb2              = U_dof(  K  , :)*bfl_;
     ujil              = ul_i-ur_i;
     ujir              =-ujil;
+    ulb1              = g.ulb1;
+    urb2              = g.urb2;
     ujb1              = urb1-ulb1;
     ujb2              = ulb2-urb2;
-    dU_dofli          = 1./2.*bfl_i_M.*ujil; % o->
-    dU_dofri          =-1./2.*bfr_i_M.*ujir; % <-o
-    dU_dofb1          =      -bfrb1_M.*ujb1; % <-o
-    dU_dofb2          =       bflb2_M.*ujb2; % o->
+    dU_dofli          = bfl_i_M./2.*ujil; % o->
+    dU_dofri          =-bfr_i_M./2.*ujir; % <-o
+    dU_dofb1          =-bfrb1_M.*ujb1;    % <-o
+    dU_dofb2          = bflb2_M.*ujb2;    % o->
     dU_doff(1:Km1, :) = dU_doff(1:Km1, :)+dU_dofli;
     dU_doff(2:K  , :) = dU_doff(2:K  , :)+dU_dofri;
-    dU_doff(    1, :) = dU_doff(    1, :)+dU_dofb1;
-    dU_doff(    K, :) = dU_doff(    K, :)+dU_dofb2;
+    dU_doff(1    , :) = dU_doff(1    , :)+dU_dofb1;
+    dU_doff(  K  , :) = dU_doff(  K  , :)+dU_dofb2;
     dU_doft           = ...
         dU_doft-dU_doff;
     %----------------------------------------------------------------------
@@ -55,10 +57,10 @@ X.dU_doft = dU_doft;
 % CHECK #1:
 %--------------------------------------------------------------------------
 %{
-ffll_m        = intg.ffll_m;
-fflr_m        = intg.fflr_m;
-ffrl_m        = intg.ffrl_m;
-ffrr_m        = intg.ffrr_m;
+ffll_m        = g.ffll_m;
+fflr_m        = g.fflr_m;
+ffrl_m        = g.ffrl_m;
+ffrr_m        = g.ffrr_m;
 ffll_mt       = ffll_m.';
 fflr_mt       = fflr_m.';
 ffrl_mt       = ffrl_m.';
@@ -77,14 +79,14 @@ diffl2        = dU_dofb1-dU_dofb1I; max(abs(diffl2), [], 'all')
 diffr2        = dU_dofb2-dU_dofb2I; max(abs(diffr2), [], 'all')
 %--------------------------------------------------------------------------
 NN            = N*N;
-TNN           = mesh.TNN;
-IJdl          = mesh.IJdl; % ll
-IJol          = mesh.IJol; % lr
-IJor          = mesh.IJor; % rl
-IJdr          = mesh.IJdr; % rr
-IJb1          = mesh.IJb1; % rrb1
-IJb2          = mesh.IJb2; % llb2
-JAUX          = mesh.Jaux; % aux. matrix (for debugging)
+TNN           = g.TNN;
+IJdl          = g.IJdl; % ll
+IJol          = g.IJol; % lr
+IJor          = g.IJor; % rl
+IJdr          = g.IJdr; % rr
+IJb1          = g.IJb1; % rrb1
+IJb2          = g.IJb2; % llb2
+JAUX          = g.Jaux; % aux. matrix (for debugging)
 Lll_it        = zeros(N, N, Km1);
 Llr_it        = zeros(N, N, Km1);
 Lrl_it        = zeros(N, N, Km1);
@@ -128,10 +130,10 @@ diff_3        = dU_doff-lift1I; max(abs(diff_3), [], 'all')
 % CHECK #2:
 %--------------------------------------------------------------------------
 %{
-visu    = intg.visu;
-xdc     = mesh.xdc;
-xqc     = intg.xqc;
-Wbf_m   = intg.Wbf_m;
+xdc     = g.xdc;
+xqc     = g.xqc;
+Wbf_m   = g.Wbf_m;
+visu    = g.visu;
 dU_dofa = inittype(1, funch, xdc, xqc, Wbf_m); % funch = function handle
 figure;
 hold on;

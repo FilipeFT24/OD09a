@@ -1,23 +1,14 @@
-function [g] = Res(basis, mesh, intg, flag, nu, c, U_dof, Uh, dUh, dAdUh)
-%--------------------------------------------------------------------------
-Xl       = mesh.Xl;
-Xr       = mesh.Xr;
-det      = mesh.det;
-bf_      = intg.bf_;
-Wbf      = intg.Wbf;
+function [g] = Res(g, flag, nu, c, U_dof, dUh, dAdUh)
 %--------------------------------------------------------------------------
 A_dof    = nu+U_dof;
-ulb1     =  Uh(Xl);
-urb2     =  Uh(Xr);
-dlb1     = dUh(Xl);
-drb2     = dUh(Xr);
-alb1     = nu+ulb1;
-arb2     = nu+urb2;
-X1       = func_dU  (basis, mesh, intg,        U_dof, flag,             ulb1, urb2,               dUh);
-dAdU_dof = func_dAdU(basis, mesh, intg, A_dof, U_dof,       alb1, arb2, ulb1, urb2, dlb1, drb2, dAdUh);
+X1       = func_dU  (g,        U_dof, flag, dUh);
+dAdU_dof = func_dAdU(g, A_dof, U_dof,       dAdUh);
 %--------------------------------------------------------------------------
+det      = g.det;
+bf_      = g.bf_;
+Wbf      = g.Wbf;
+F_dof    = g.F_dof;
 dU_dof   = X1.dU_doft;
-F_dof    = intg.F_dof;
 F        = F_dof*bf_;
 dU       = dU_dof*bf_;
 dAdU     = dAdU_dof*bf_;

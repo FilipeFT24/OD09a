@@ -86,7 +86,6 @@ if flag(1, 1)
     end
     %}
     %----------------------------------------------------------------------
-    %{
     figure('Color', 'w', 'Windowstate', 'maximized', 'Renderer', 'painters');
     hold on;
     for i = 1:np
@@ -105,7 +104,6 @@ if flag(1, 1)
         xtitle1, ...
         ytitle1, ...
         [], [], [], []);
-    %}
     %----------------------------------------------------------------------
     figure('Color', 'w', 'Windowstate', 'maximized', 'Renderer', 'painters');
     hold on;

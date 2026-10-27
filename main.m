@@ -78,7 +78,7 @@ for i = 1:2
             U_dof = zeros(K(1, j), N);
             delta = realmax;
             if j == 1
-                FUNC{1, k} = aux.fh;
+                FUNC{1, k} = aux.bfh;
                 VISU{1, k} = aux.visu;
             end
             %--------------------------------------------------------------
@@ -101,8 +101,8 @@ for i = 1:2
             g1a    = Res(aux, flag, nu, c, U_dof, dUh, dAdUh);
             g2a    = Jac(aux, flag, nu, c, U_dof, g1a.dU, g1a.dUf);
             J_mat  = g2a.MAT;
-            G_dof  = aux.Gkdof;
-            G_doft = G_dof.';
+            G_dofM = aux.G_dofM;
+            G_doft = G_dofM.';
             G1doft = G_doft(:);
             P_doft = J_mat.'\G1doft;
             P_dof  = reshape(P_doft, [], K(1, j)).';
@@ -114,11 +114,6 @@ for i = 1:2
             S      = c.*dU.^2;
             S_dofM = S*Wbf.*det;
             S_dof  = S_dofM/mass./det;
-%             figure;
-%             hold on;
-%             plot(S_dof, '-r');
-%             plot(Sh(aux.Xc), 'og');
-
             [dud{1, i}{j, k}, l2s{1, i}(j, k), h1s{1, i}(j, k)] = ...
                 enorm(aux, S_dof, Sh, dSh);
             %--------------------------------------------------------------

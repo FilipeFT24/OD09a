@@ -124,6 +124,7 @@ Wbf_   = Wbf.';
 mass   = bf_*Wbf;
 Wbd_m  = Wbd/mass;
 Wbf_m  = Wbf/mass;
+%--------------------------------------------------------------------------
 F_dof  = inittype(1, Fh, Xd, Xq, Wbf_m);
 G_dof  = inittype(1, Gh, Xd, Xq, Wbf_m);
 G_dofM = G_dof*mass.*det;

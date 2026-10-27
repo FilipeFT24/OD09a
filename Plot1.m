@@ -7,7 +7,7 @@ for i = 1:size(fc, 1)
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 color        = linspecer(9, 'Qualitative');
-flag         = [1, 0];
+flag         = [1, 1];
 nh           = size(l2{1, 1}, 1);
 np           = size(l2{1, 1}, 2);
 kh           = nh;

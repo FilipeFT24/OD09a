@@ -34,6 +34,8 @@ Uh    = @(x) sin(arg(x));
 dUh   = @(x) pi.*cos(arg(x));
 dAdUh = @(x)-pi.^2.*(sin(arg(x)).^2+nu.*sin(arg(x))-cos(arg(x)).^2);
 Fh    = @(x) pi.^2.*((nu+sin(pi.*x)).*sin(pi.*x)-(1+c).*cos(pi.*x).^2);
+Sh    = @(x) c.*dUh(x).^2;
+dSh   = @(x)-2.*pi.^3.*c.*cos(pi.*x).*sin(pi.*x);
 %--------------------------------------------------------------------------
 Ph    = @(x) sin(arg(x));
 dPh   = @(x) pi.*cos(arg(x));
@@ -45,11 +47,14 @@ flag  = false;
 nh    = size(K, 2);
 np    = size(p, 2);
 Fd    = cell(1, 2);  % primal  error distribution
-Fda   = cell(1, 2);  % adjoint error distribution
 l2    = cell(1, 2);  % primal  error in the        l2-norm
 h1    = cell(1, 2);  % primal  error in the broken h1-norm
+Fda   = cell(1, 2);  % adjoint error distribution
 l2a   = cell(1, 2);  % adjoint error in the        l2-norm
 h1a   = cell(1, 2);  % adjoint error in the broken h1-norm
+dud   = cell(1, 2);
+l2s   = cell(1, 2);
+h1s   = cell(1, 2);
 FUNC  = cell(1, np);
 VISU  = cell(1, np);
 for i = 1:2
@@ -93,9 +98,9 @@ for i = 1:2
             [Fd{1, i}{j, k}, l2{1, i}(j, k), h1{1, i}(j, k)] = ...
                 enorm(aux, U_dof, Uh, dUh);
             %--------------------------------------------------------------
-            g1     = Res(aux, flag, nu, c, U_dof, dUh, dAdUh);
-            g2     = Jac(aux, flag, nu, c, U_dof, g1.dU, g1.dUf);
-            J_mat  = g2.MAT;
+            g1a    = Res(aux, flag, nu, c, U_dof, dUh, dAdUh);
+            g2a    = Jac(aux, flag, nu, c, U_dof, g1a.dU, g1a.dUf);
+            J_mat  = g2a.MAT;
             G_dof  = aux.Gkdof;
             G_doft = G_dof.';
             G1doft = G_doft(:);
@@ -103,6 +108,19 @@ for i = 1:2
             P_dof  = reshape(P_doft, [], K(1, j)).';
             [Fda{1, i}{j, k}, l2a{1, i}(j, k), h1a{1, i}(j, k)] = ...
                 enorm(aux, P_dof, Ph, dPh);
+            %--------------------------------------------------------------
+            Wbf    = aux.Wbf;
+            dU     = g1.dU;
+            S      = c.*dU.^2;
+            S_dofM = S*Wbf.*det;
+            S_dof  = S_dofM/mass./det;
+%             figure;
+%             hold on;
+%             plot(S_dof, '-r');
+%             plot(Sh(aux.Xc), 'og');
+
+            [dud{1, i}{j, k}, l2s{1, i}(j, k), h1s{1, i}(j, k)] = ...
+                enorm(aux, S_dof, Sh, dSh);
             %--------------------------------------------------------------
         end
     end
@@ -156,6 +174,36 @@ for k = 1:np
                     log(l2a{1, 2}(j, k)./l2a{1, 2}(j-1, k))./log(h(1, j)./h(1, j-1)), l2a{1, 1}(j, k), l2a{1, 2}(j, k), ...
                     log(h1a{1, 1}(j, k)./h1a{1, 1}(j-1, k))./log(h(1, j)./h(1, j-1)), ...
                     log(h1a{1, 2}(j, k)./h1a{1, 2}(j-1, k))./log(h(1, j)./h(1, j-1)), h1a{1, 1}(j, k), h1a{1, 2}(j, k));
+            end
+        end
+    end
+    fprintf("---------------   ---------------------------    ---------------   ---------------------------\n");
+end
+fprintf("\n");
+fprintf("______________________________________________________________________________________________\n");
+fprintf("______________________________________________________________________________________________\n");
+fprintf("                                           SOURCE\n");
+fprintf("----------------------------------------------------------------------------------------------\n");
+fprintf("                   l2-norm                                          h1-norm (broken)          \n");
+fprintf("---------------------------------------------    ---------------------------------------------\n");
+fprintf("   N   |    Y           N      |      Y             N   |    Y           N      |      Y      \n---------------   ---------------------------    ---------------   ---------------------------\n");
+for k = 1:np
+    for j = 1:nh
+        if j == 1
+            fprintf("                  %.6e | %.6e                      %.6e | %.6e\n", l2s{1, 1}(j, k), l2s{1, 2}(j, k), h1s{1, 1}(j, k), h1s{1, 2}(j, k));
+        else
+            if h1s{1, 2}(j-1, k) < h1s{1, 2}(j, k)
+                fprintf("%.4f | %.4f   %.6e | %.6e    %.4f |%.4f   %.6e | %.6e\n", ...
+                    log(l2s{1, 1}(j, k)./l2s{1, 1}(j-1, k))./log(h(1, j)./h(1, j-1)), ...
+                    log(l2s{1, 2}(j, k)./l2s{1, 2}(j-1, k))./log(h(1, j)./h(1, j-1)), l2s{1, 1}(j, k), l2s{1, 2}(j, k), ...
+                    log(h1s{1, 1}(j, k)./h1s{1, 1}(j-1, k))./log(h(1, j)./h(1, j-1)), ...
+                    log(h1s{1, 2}(j, k)./h1s{1, 2}(j-1, k))./log(h(1, j)./h(1, j-1)), h1s{1, 1}(j, k), h1s{1, 2}(j, k));
+            else
+                fprintf("%.4f | %.4f   %.6e | %.6e    %.4f | %.4f   %.6e | %.6e\n", ...
+                    log(l2s{1, 1}(j, k)./l2s{1, 1}(j-1, k))./log(h(1, j)./h(1, j-1)), ...
+                    log(l2s{1, 2}(j, k)./l2s{1, 2}(j-1, k))./log(h(1, j)./h(1, j-1)), l2s{1, 1}(j, k), l2s{1, 2}(j, k), ...
+                    log(h1s{1, 1}(j, k)./h1s{1, 1}(j-1, k))./log(h(1, j)./h(1, j-1)), ...
+                    log(h1s{1, 2}(j, k)./h1s{1, 2}(j-1, k))./log(h(1, j)./h(1, j-1)), h1s{1, 1}(j, k), h1s{1, 2}(j, k));
             end
         end
     end
